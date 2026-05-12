@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Newton's Billiards</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #222;
+            overflow: hidden;
+            touch-action: none; /* Prevent default browser touch actions like scrolling/zooming */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* UI Overlay */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Let touches pass through to canvas when not on a UI element */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+        }
+
+        #stage-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        #stage-desc {
+            font-size: 0.9rem;
+            color: #ddd;
+            margin-top: 5px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .btn {
+            pointer-events: auto;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 3px rgba(0,0,0,0.3);
+        }
+
+        #reset-btn {
+            background-color: #f44336;
+        }
+
+        .footer {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        /* Spin UI (당점 선택 UI) */
+        #spin-ui-container {
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #555;
+        }
+
+        #spin-ui-title {
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+            color: #ccc;
+        }
+
+        #spin-ball {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fff, #ccc 40%, #888);
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.5), 0 5px 10px rgba(0,0,0,0.5);
+        }
+
+        .spin-point {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(255, 0, 0, 0.3);
+            border: 1px solid red;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .spin-point.active {
+            background-color: rgba(255, 0, 0, 0.8);
+            box-shadow: 0 0 10px red;
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        /* Positions for spin points (상, 중, 하, 좌, 우) */
+        #spin-top { top: 15%; left: 50%; }
+        #spin-center { top: 50%; left: 50%; }
+        #spin-bottom { top: 85%; left: 50%; }
+        #spin-left { top: 50%; left: 15%; }
+        #spin-right { top: 50%; left: 85%; }
+
+        /* Next Stage Banner */
+        #message-banner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.85);
+            padding: 20px 40px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            pointer-events: auto;
+            border: 2px solid #4CAF50;
+        }
+
+        #message-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="ui-layer">
+        <div class="header">
+            <div>
+                <div id="stage-title">Stage 1: 입사각과 반사각</div>
+                <div id="stage-desc">쿠션을 맞추고 빨간 공을 맞추세요.</div>
+            </div>
+            <button id="reset-btn" class="btn">다시 하기</button>
+        </div>
+
+        <div class="footer">
+            <div style="flex: 1;"></div> <!-- Spacer -->
+
+            <div id="spin-ui-container">
+                <div id="spin-ui-title">당점 선택</div>
+                <div id="spin-ball">
+                    <div class="spin-point" id="spin-top" data-spin="top"></div>
+                    <div class="spin-point active" id="spin-center" data-spin="center"></div>
+                    <div class="spin-point" id="spin-bottom" data-spin="bottom"></div>
+                    <div class="spin-point" id="spin-left" data-spin="left"></div>
+                    <div class="spin-point" id="spin-right" data-spin="right"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="message-banner">
+        <div id="message-text">클리어!</div>
+        <button id="next-stage-btn" class="btn">다음 스테이지</button>
+    </div>
+
+<script>
+/**
+ * -------------------------------------------------------------
+ * 2D Vector Math Library
+ * -------------------------------------------------------------
+ */
+class Vec2 {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    add(v) { return new Vec2(this.x + v.x, this.y + v.y); }
+    sub(v) { return new Vec2(this.x - v.x, this.y - v.y); }
+    mult(n) { return new Vec2(this.x * n, this.y * n); }
+    mag() { return Math.sqrt(this.x * this.x + this.y * this.y); }
+    normalize() {
+        let m = this.mag();
+        return m === 0 ? new Vec2(0, 0) : new Vec2(this.x / m, this.y / m);
+    }
+    dot(v) { return this.x * v.x + this.y * v.y; }
+    dist(v) { return this.sub(v).mag(); }
+    copy() { return new Vec2(this.x, this.y); }
+}
+
+/**
+ * -------------------------------------------------------------
+ * Game Entities
+ * -------------------------------------------------------------
+ */
+class Ball {
+    constructor(x, y, radius, color, isCue = false) {
+        this.pos = new Vec2(x, y);
+        this.vel = new Vec2(0, 0);
+        this.radius = radius;
+        this.color = color;
+        this.isCue = isCue;
+        this.mass = 1;
+
+        // Spin related (for stage 3)
+        // positive = topspin, negative = backspin
+        this.spin = 0;
+        this.spinDir = new Vec2(0, 0); // Direction spin was applied from (the shot direction)
+    }
+
+    update(dt) {
+        // Apply friction
+        const friction = 0.985;
+        this.vel = this.vel.mult(friction);
+
+        // Apply spin effect using the initial spin direction, not current movement direction
+        // This prevents the backspin force from flipping when the ball starts rolling backward
+        if (Math.abs(this.spin) > 0.1 && this.spinDir.mag() > 0) {
+            let spinForce = this.spinDir.mult(this.spin * 0.1);
+            this.vel = this.vel.add(spinForce);
+
+            // Decay spin
+            this.spin *= 0.95;
+        } else {
+            this.spin = 0;
+        }
+
+        // Stop completely if very slow
+        if (this.vel.mag() < 0.1 && Math.abs(this.spin) < 0.5) {
+            this.vel.x = 0;
+            this.vel.y = 0;
+            this.spin = 0;
+        }
+
+        // Move
+        this.pos = this.pos.add(this.vel);
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
+
+        // Gradient for 3D look
+        let grad = ctx.createRadialGradient(
+            this.pos.x - this.radius*0.3, this.pos.y - this.radius*0.3, this.radius*0.1,
+            this.pos.x, this.pos.y, this.radius
+        );
+        grad.addColorStop(0, '#fff');
+        grad.addColorStop(0.3, this.color);
+        grad.addColorStop(1, '#000');
+
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.closePath();
+
+        // Draw a dot on cue ball to visualize spin (optional)
+        if (this.isCue && Math.abs(this.spin) > 0) {
+            ctx.beginPath();
+            ctx.arc(this.pos.x, this.pos.y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,0,0,0.5)';
+            ctx.fill();
+            ctx.closePath();
+        }
+    }
+}
+
+class Pocket {
+    constructor(x, y, radius) {
+        this.pos = new Vec2(x, y);
+        this.radius = radius;
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = '#111';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#000';
+        ctx.stroke();
+        ctx.closePath();
+    }
+}
+
+/**
+ * -------------------------------------------------------------
+ * Physics Engine Functions
+ * -------------------------------------------------------------
+ */
+
+// Handle collision between a ball and table boundaries (cushions)
+function resolveWallCollision(ball, tableRect) {
+    let bounced = false;
+
+    // Left
+    if (ball.pos.x - ball.radius < tableRect.x) {
+        ball.pos.x = tableRect.x + ball.radius;
+        ball.vel.x *= -0.9; // Restitution
+        bounced = true;
+    }
+    // Right
+    else if (ball.pos.x + ball.radius > tableRect.x + tableRect.w) {
+        ball.pos.x = tableRect.x + tableRect.w - ball.radius;
+        ball.vel.x *= -0.9;
+        bounced = true;
+    }
+    // Top
+    if (ball.pos.y - ball.radius < tableRect.y) {
+        ball.pos.y = tableRect.y + ball.radius;
+        ball.vel.y *= -0.9;
+        bounced = true;
+    }
+    // Bottom
+    else if (ball.pos.y + ball.radius > tableRect.y + tableRect.h) {
+        ball.pos.y = tableRect.y + tableRect.h - ball.radius;
+        ball.vel.y *= -0.9;
+        bounced = true;
+    }
+
+    return bounced;
+}
+
+// Check and resolve collision between two balls (Elastic collision)
+function resolveBallCollision(ball1, ball2) {
+    let delta = ball1.pos.sub(ball2.pos);
+    let dist = delta.mag();
+    let minDist = ball1.radius + ball2.radius;
+
+    if (dist < minDist) {
+        // Resolve interpenetration
+        let overlap = minDist - dist;
+        let correction = delta.normalize().mult(overlap / 2);
+        ball1.pos = ball1.pos.add(correction);
+        ball2.pos = ball2.pos.sub(correction);
+
+        // Calculate new velocities (conservation of momentum)
+        let n = delta.normalize(); // Collision normal
+        let relVel = ball1.vel.sub(ball2.vel);
+        let speed = relVel.dot(n);
+
+        // If moving apart, do nothing
+        if (speed > 0) return true;
+
+        // Restitution (elasticity) - Billiard balls are highly elastic
+        let e = 0.95;
+
+        let impulseStr = -(1 + e) * speed / (1/ball1.mass + 1/ball2.mass);
+        let impulse = n.mult(impulseStr);
+
+        ball1.vel = ball1.vel.add(impulse.mult(1/ball1.mass));
+        ball2.vel = ball2.vel.sub(impulse.mult(1/ball2.mass));
+
+        return true; // Collision occurred
+    }
+    return false;
+}
+
+/**
+ * -------------------------------------------------------------
+ * Game State and Slingshot Mechanic
+ * -------------------------------------------------------------
+ */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let cw = window.innerWidth;
+let ch = window.innerHeight;
+canvas.width = cw;
+canvas.height = ch;
+
+window.addEventListener('resize', () => {
+    cw = window.innerWidth;
+    ch = window.innerHeight;
+    canvas.width = cw;
+    canvas.height = ch;
+    // We should ideally reposition things on resize, but for this prototype, simple resize is ok
+});
+
+// Game State variables
+let state = 'aiming'; // 'aiming', 'rolling', 'end'
+let currentStage = 1;
+let balls = [];
+let pockets = [];
+let cueBall = null;
+
+// Table boundaries (leaving some margin for the UI)
+let tableRect = {
+    x: 20,
+    y: 100, // below header
+    w: cw - 40,
+    h: ch - 250 // above footer
+};
+
+// Slingshot variables
+let dragStart = null;
+let dragCurrent = null;
+let maxDragDist = 150;
+let selectedSpin = 'center';
+
+// Spin UI Logic
+document.querySelectorAll('.spin-point').forEach(el => {
+    el.addEventListener('click', (e) => {
+        document.querySelectorAll('.spin-point').forEach(p => p.classList.remove('active'));
+        e.target.classList.add('active');
+        selectedSpin = e.target.dataset.spin;
+    });
+});
+
+// Input handling (Touch & Mouse)
+function getPointerPos(e) {
+    if (e.touches && e.touches.length > 0) {
+        return new Vec2(e.touches[0].clientX, e.touches[0].clientY);
+    }
+    return new Vec2(e.clientX, e.clientY);
+}
+
+function handleStart(e) {
+    if (state !== 'aiming' || e.target !== canvas) return;
+    dragStart = getPointerPos(e);
+    dragCurrent = dragStart.copy();
+}
+
+function handleMove(e) {
+    if (state !== 'aiming' || !dragStart) return;
+    dragCurrent = getPointerPos(e);
+}
+
+function handleEnd(e) {
+    if (state !== 'aiming' || !dragStart) return;
+
+    let dragVec = dragStart.sub(dragCurrent);
+    if (dragVec.mag() > 5) {
+        // Shoot!
+        let force = Math.min(dragVec.mag() / maxDragDist, 1.0) * 20; // Max speed 20
+        let shootDir = dragVec.normalize();
+        cueBall.vel = shootDir.mult(force);
+
+        // Apply spin based on selection
+        cueBall.spinDir = shootDir.copy(); // Record the original shot direction for spin
+        if (selectedSpin === 'bottom') {
+            // Strong backspin relative to shot power
+            cueBall.spin = -force * 0.8;
+        } else if (selectedSpin === 'top') {
+            cueBall.spin = force * 0.5;
+        } else {
+            cueBall.spin = 0;
+        }
+
+        state = 'rolling';
+    }
+
+    dragStart = null;
+    dragCurrent = null;
+}
+
+canvas.addEventListener('mousedown', handleStart);
+canvas.addEventListener('mousemove', handleMove);
+window.addEventListener('mouseup', handleEnd); // Use window to catch release outside
+
+canvas.addEventListener('touchstart', handleStart, {passive: false});
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault(); // Prevent scrolling
+    handleMove(e);
+}, {passive: false});
+window.addEventListener('touchend', handleEnd);
+
+/**
+ * -------------------------------------------------------------
+ * Trajectory Prediction
+ * -------------------------------------------------------------
+ */
+/**
+ * -------------------------------------------------------------
+ * Stages and Game Logic
+ * -------------------------------------------------------------
+ */
+function loadStage(stageNum) {
+    balls = [];
+    pockets = [];
+    state = 'aiming';
+    currentStage = stageNum;
+    document.getElementById('message-banner').style.display = 'none';
+
+    let cx = tableRect.x + tableRect.w / 2;
+    let cy = tableRect.y + tableRect.h / 2;
+
+    if (stageNum === 1) {
+        document.getElementById('stage-title').innerText = "Stage 1: 입사각과 반사각";
+        document.getElementById('stage-desc').innerText = "벽을 한 번 맞추고 빨간 공을 맞추세요.";
+
+        cueBall = new Ball(cx, tableRect.y + tableRect.h - 100, 15, '#fff', true);
+        let targetBall = new Ball(cx, tableRect.y + 100, 15, '#f00');
+
+        // Add obstacle so direct hit is impossible
+        balls.push(targetBall);
+        balls.push(cueBall);
+
+    } else if (stageNum === 2) {
+        document.getElementById('stage-title').innerText = "Stage 2: 분리각 (운동량 보존)";
+        document.getElementById('stage-desc').innerText = "공을 비스듬히 맞춰 두 공을 각각 포켓에 넣으세요.";
+
+        cueBall = new Ball(cx, tableRect.y + tableRect.h - 100, 15, '#fff', true);
+        let targetBall = new Ball(cx, cy, 15, '#f00');
+
+        balls.push(targetBall);
+        balls.push(cueBall);
+
+        // Add two pockets
+        pockets.push(new Pocket(tableRect.x + 40, tableRect.y + 40, 25)); // Top left
+        pockets.push(new Pocket(tableRect.x + tableRect.w - 40, tableRect.y + 40, 25)); // Top right
+
+    } else if (stageNum === 3) {
+        document.getElementById('stage-title').innerText = "Stage 3: 마찰력과 회전 (끌어치기)";
+        document.getElementById('stage-desc').innerText = "하단 당점을 주고 빨간 공을 맞춘 뒤 돌아와서 노란 공을 맞추세요.";
+
+        cueBall = new Ball(cx, tableRect.y + tableRect.h - 100, 15, '#fff', true);
+        let targetBall = new Ball(cx, cy - 50, 15, '#f00');
+        let secondTarget = new Ball(cx, tableRect.y + tableRect.h - 30, 15, '#ff0');
+
+        balls.push(targetBall);
+        balls.push(secondTarget);
+        balls.push(cueBall);
+
+        // Select bottom spin automatically for hint
+        document.querySelectorAll('.spin-point').forEach(p => p.classList.remove('active'));
+        document.getElementById('spin-bottom').classList.add('active');
+        selectedSpin = 'bottom';
+    }
+}
+
+// Win conditions
+let stage1HitWall = false;
+let stage3HitFirst = false;
+
+function checkWinCondition() {
+    if (currentStage === 1) {
+        // Did we hit wall then target? (Checked in game loop)
+    } else if (currentStage === 2) {
+        // Are both balls in pockets?
+        let activeBalls = balls.filter(b => b.active !== false);
+        if (activeBalls.length === 0) {
+            showClearMessage();
+        } else if (activeBalls.length < balls.length && state === 'aiming') {
+            // Failed, reset
+            loadStage(currentStage);
+        }
+    } else if (currentStage === 3) {
+        // (Checked in game loop)
+    }
+}
+
+function showClearMessage() {
+    state = 'end';
+    document.getElementById('message-banner').style.display = 'block';
+    if (currentStage >= 3) {
+        document.getElementById('message-text').innerText = "모든 스테이지 클리어!";
+        document.getElementById('next-stage-btn').innerText = "처음부터";
+    } else {
+        document.getElementById('message-text').innerText = "클리어!";
+        document.getElementById('next-stage-btn').innerText = "다음 스테이지";
+    }
+}
+
+document.getElementById('next-stage-btn').addEventListener('click', () => {
+    if (currentStage >= 3) {
+        loadStage(1);
+    } else {
+        loadStage(currentStage + 1);
+    }
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+    loadStage(currentStage);
+});
+
+function drawTrajectory(ctx) {
+    if (!dragStart || !dragCurrent || state !== 'aiming') return;
+
+    let dragVec = dragStart.sub(dragCurrent);
+    if (dragVec.mag() <= 5) return;
+
+    let dir = dragVec.normalize();
+
+    // Simulate path
+    let simPos = cueBall.pos.copy();
+    let simVel = dir.mult(10); // arbitrary speed for simulation steps
+
+    ctx.beginPath();
+    ctx.moveTo(simPos.x, simPos.y);
+
+    let hitWall = false;
+    let hitBall = false;
+    let maxSteps = 100;
+
+    // Raycast simulation
+    for (let i = 0; i < maxSteps; i++) {
+        simPos = simPos.add(simVel);
+        ctx.lineTo(simPos.x, simPos.y);
+
+        // Check wall collision
+        if (simPos.x - cueBall.radius < tableRect.x) { simVel.x *= -1; hitWall = true; }
+        else if (simPos.x + cueBall.radius > tableRect.x + tableRect.w) { simVel.x *= -1; hitWall = true; }
+
+        if (simPos.y - cueBall.radius < tableRect.y) { simVel.y *= -1; hitWall = true; }
+        else if (simPos.y + cueBall.radius > tableRect.y + tableRect.h) { simVel.y *= -1; hitWall = true; }
+
+        if (hitWall) {
+            // Draw bounce and stop after one bounce for simplicity,
+            // but the prompt says "show bounce", let's continue a bit
+            // To prevent infinite bounce in corner, break if it hits twice
+        }
+
+        // Check ball collision
+        for (let j = 0; j < balls.length; j++) {
+            let b = balls[j];
+            if (b.isCue) continue;
+
+            if (simPos.dist(b.pos) < cueBall.radius + b.radius) {
+                hitBall = true;
+
+                // Draw target ball ghost
+                ctx.arc(simPos.x, simPos.y, cueBall.radius, 0, Math.PI * 2);
+
+                // Draw separation lines (Ghost ball to target ball center)
+                let n = simPos.sub(b.pos).normalize();
+
+                // Target ball velocity direction will be along -n
+                ctx.moveTo(b.pos.x, b.pos.y);
+                let targetVel = n.mult(-50); // visual length
+                ctx.lineTo(b.pos.x + targetVel.x, b.pos.y + targetVel.y);
+
+                break;
+            }
+        }
+
+        if (hitBall) break;
+    }
+
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.closePath();
+}
+
+/**
+ * -------------------------------------------------------------
+ * Game Loop (Update & Render)
+ * -------------------------------------------------------------
+ */
+
+let lastTime = 0;
+
+function gameLoop(timestamp) {
+    let dt = timestamp - lastTime;
+    lastTime = timestamp;
+
+    update(dt);
+    render(ctx);
+
+    requestAnimationFrame(gameLoop);
+}
+
+function update(dt) {
+    if (state === 'end') return;
+
+    let isMoving = false;
+
+    // Filter active balls
+    let activeBalls = balls.filter(b => b.active !== false);
+
+    // Update balls
+    for (let i = 0; i < activeBalls.length; i++) {
+        let ball = activeBalls[i];
+        ball.update(dt);
+
+        if (ball.vel.mag() > 0) isMoving = true;
+
+        // Wall collisions
+        if (resolveWallCollision(ball, tableRect)) {
+            if (currentStage === 1 && ball.isCue) {
+                stage1HitWall = true;
+            }
+        }
+
+        // Pocket collisions
+        for (let p of pockets) {
+            if (ball.pos.dist(p.pos) < p.radius) {
+                ball.active = false; // Hide ball
+                ball.vel = new Vec2(0,0);
+            }
+        }
+    }
+
+    // Ball-Ball Collisions
+    for (let i = 0; i < activeBalls.length; i++) {
+        for (let j = i + 1; j < activeBalls.length; j++) {
+            let b1 = activeBalls[i];
+            let b2 = activeBalls[j];
+
+            if (resolveBallCollision(b1, b2)) {
+                if (currentStage === 1 && b1.isCue && !b2.isCue) {
+                    if (stage1HitWall) {
+                        showClearMessage();
+                    } else {
+                        // Failed, reset
+                        loadStage(1);
+                    }
+                }
+
+                if (currentStage === 3) {
+                    // Target is red ball (#f00), second target is yellow (#ff0)
+                    if (b1.isCue && b2.color === '#f00' || b2.isCue && b1.color === '#f00') {
+                        stage3HitFirst = true;
+                    }
+                    if (stage3HitFirst && (b1.isCue && b2.color === '#ff0' || b2.isCue && b1.color === '#ff0')) {
+                        showClearMessage();
+                    }
+                }
+            }
+        }
+    }
+
+    // State Transitions
+    if (state === 'rolling' && !isMoving) {
+        state = 'aiming';
+
+        // Reset flags for new shot regardless of whether they hit or not
+        stage1HitWall = false;
+        stage3HitFirst = false; // reset combo
+
+        checkWinCondition();
+    }
+}
+
+function render(ctx) {
+    // Clear background
+    ctx.fillStyle = '#222';
+    ctx.fillRect(0, 0, cw, ch);
+
+    // Draw Table
+    ctx.fillStyle = '#0f6e3c'; // Billiard green
+    ctx.fillRect(tableRect.x, tableRect.y, tableRect.w, tableRect.h);
+
+    // Draw cushions
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = '#0a4a28';
+    ctx.strokeRect(tableRect.x, tableRect.y, tableRect.w, tableRect.h);
+
+    // Draw Pockets
+    for (let p of pockets) {
+        p.draw(ctx);
+    }
+
+    // Draw trajectory
+    if (state === 'aiming') {
+        drawTrajectory(ctx);
+
+        // Draw Slingshot UI
+        if (dragStart && dragCurrent) {
+            ctx.beginPath();
+            ctx.moveTo(dragStart.x, dragStart.y);
+            ctx.lineTo(dragCurrent.x, dragCurrent.y);
+            ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+            ctx.lineWidth = 5;
+            ctx.stroke();
+
+            // Draw pull handle
+            ctx.beginPath();
+            ctx.arc(dragCurrent.x, dragCurrent.y, 15, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(255,0,0,0.5)';
+            ctx.fill();
+        }
+    }
+
+    // Draw Balls
+    for (let ball of balls) {
+        if (ball.active !== false) {
+            ball.draw(ctx);
+        }
+    }
+}
+
+// Start Game
+loadStage(1);
+requestAnimationFrame(gameLoop);
+
+</script>
+</body>
+</html>
