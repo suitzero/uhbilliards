@@ -556,12 +556,46 @@ function loadStage(stageNum) {
         document.querySelectorAll('.spin-point').forEach(p => p.classList.remove('active'));
         document.getElementById('spin-bottom').classList.add('active');
         selectedSpin = 'bottom';
+    } else if (stageNum === 4) {
+        // Stage 4: Topspin (밀어치기)
+        document.getElementById('stage-title').innerText = "Stage 4: 회전 관성 (밀어치기)";
+        document.getElementById('stage-desc').innerText = "상단 당점을 주고 빨간 공을 맞춘 뒤 앞으로 밀고 나가 노란 공을 맞추세요.";
+
+        cueBall = new Ball(cx, tableRect.y + tableRect.h - 100, 15, '#fff', true);
+        let targetBall = new Ball(cx, cy, 15, '#f00'); // First target
+        let secondTarget = new Ball(cx, tableRect.y + 100, 15, '#ff0'); // Second target directly ahead
+
+        balls.push(targetBall);
+        balls.push(secondTarget);
+        balls.push(cueBall);
+
+        // Select top spin automatically for hint
+        document.querySelectorAll('.spin-point').forEach(p => p.classList.remove('active'));
+        document.getElementById('spin-top').classList.add('active');
+        selectedSpin = 'top';
+    } else if (stageNum === 5) {
+        // Stage 5: Multi-cushion
+        document.getElementById('stage-title').innerText = "Stage 5: 다중 쿠션";
+        document.getElementById('stage-desc').innerText = "쿠션을 2번 이상 맞춘 후 빨간 공을 맞추세요.";
+
+        // Position cue ball near bottom left, target near top right
+        cueBall = new Ball(tableRect.x + 100, tableRect.y + tableRect.h - 100, 15, '#fff', true);
+        let targetBall = new Ball(tableRect.x + tableRect.w - 100, tableRect.y + 100, 15, '#f00');
+
+        balls.push(targetBall);
+        balls.push(cueBall);
+
+        // Select center spin
+        document.querySelectorAll('.spin-point').forEach(p => p.classList.remove('active'));
+        document.getElementById('spin-center').classList.add('active');
+        selectedSpin = 'center';
     }
 }
 
 // Win conditions
 let stage1HitWall = false;
-let stage3HitFirst = false;
+let hitRedFirst = false; // Used for Stage 3 & 4
+let cushionHits = 0; // Number of cushion hits during the current shot
 
 function checkWinCondition() {
     if (currentStage === 1) {
@@ -583,7 +617,7 @@ function checkWinCondition() {
 function showClearMessage() {
     state = 'end';
     document.getElementById('message-banner').style.display = 'block';
-    if (currentStage >= 3) {
+    if (currentStage >= 5) {
         document.getElementById('message-text').innerText = "모든 스테이지 클리어!";
         document.getElementById('next-stage-btn').innerText = "처음부터";
     } else {
@@ -593,7 +627,7 @@ function showClearMessage() {
 }
 
 document.getElementById('next-stage-btn').addEventListener('click', () => {
-    if (currentStage >= 3) {
+    if (currentStage >= 5) {
         loadStage(1);
     } else {
         loadStage(currentStage + 1);
@@ -710,8 +744,11 @@ function update(dt) {
 
         // Wall collisions
         if (resolveWallCollision(ball, tableRect)) {
-            if (currentStage === 1 && ball.isCue) {
-                stage1HitWall = true;
+            if (ball.isCue) {
+                cushionHits++;
+                if (currentStage === 1) {
+                    stage1HitWall = true;
+                }
             }
         }
 
@@ -740,13 +777,24 @@ function update(dt) {
                     }
                 }
 
-                if (currentStage === 3) {
+                if (currentStage === 3 || currentStage === 4) {
                     // Target is red ball (#f00), second target is yellow (#ff0)
                     if (b1.isCue && b2.color === '#f00' || b2.isCue && b1.color === '#f00') {
-                        stage3HitFirst = true;
+                        hitRedFirst = true;
                     }
-                    if (stage3HitFirst && (b1.isCue && b2.color === '#ff0' || b2.isCue && b1.color === '#ff0')) {
+                    if (hitRedFirst && (b1.isCue && b2.color === '#ff0' || b2.isCue && b1.color === '#ff0')) {
                         showClearMessage();
+                    }
+                }
+
+                if (currentStage === 5) {
+                    // Must hit target ball after 2 or more cushion hits
+                    if (b1.isCue && !b2.isCue || b2.isCue && !b1.isCue) {
+                        if (cushionHits >= 2) {
+                            showClearMessage();
+                        } else {
+                            loadStage(5);
+                        }
                     }
                 }
             }
@@ -759,7 +807,8 @@ function update(dt) {
 
         // Reset flags for new shot regardless of whether they hit or not
         stage1HitWall = false;
-        stage3HitFirst = false; // reset combo
+        hitRedFirst = false; // reset combo
+        cushionHits = 0; // reset cushion hits
 
         checkWinCondition();
     }
