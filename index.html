@@ -768,11 +768,13 @@ function update(dt) {
             let b2 = activeBalls[j];
 
             if (resolveBallCollision(b1, b2)) {
-                if (currentStage === 1 && b1.isCue && !b2.isCue) {
+                // Stage 1 win condition check: Did the cue ball hit the target ball?
+                // We check if either b1 is cue and b2 is target, or b2 is cue and b1 is target
+                if (currentStage === 1 && ((b1.isCue && !b2.isCue) || (b2.isCue && !b1.isCue))) {
                     if (stage1HitWall) {
-                        showClearMessage();
+                        showClearMessage(); // Win condition met
                     } else {
-                        // Failed, reset
+                        // Failed, reset the stage
                         loadStage(1);
                     }
                 }
