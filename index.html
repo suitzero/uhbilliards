@@ -10,9 +10,14 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #222;
+            background-color: #111;
+            /* Optical table grid pattern */
+            background-image:
+                linear-gradient(rgba(0, 255, 128, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 128, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
             overflow: hidden;
-            touch-action: none; /* Prevent default browser touch actions like scrolling/zooming */
+            touch-action: none;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: white;
         }
@@ -30,7 +35,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none; /* Let touches pass through to canvas when not on a UI element */
+            pointer-events: none;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -40,103 +45,95 @@
             padding: 15px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            align-items: flex-start;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
         }
 
         #stage-title {
             font-size: 1.2rem;
             font-weight: bold;
-            text-shadow: 1px 1px 2px black;
+            color: #0f0;
+            text-shadow: 0 0 5px #0f0;
         }
 
         #stage-desc {
             font-size: 0.9rem;
             color: #ddd;
             margin-top: 5px;
-            text-shadow: 1px 1px 2px black;
         }
 
         .btn {
             pointer-events: auto;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            font-size: 1rem;
+            background-color: #333;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
             font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
             cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #0f0;
+            color: #000;
         }
 
         .btn:active {
             transform: translateY(2px);
-            box-shadow: 0 2px 3px rgba(0,0,0,0.3);
         }
 
         #reset-btn {
+            border-color: #f44336;
+            color: #f44336;
+            box-shadow: 0 0 5px rgba(244, 67, 54, 0.3);
+        }
+
+        #reset-btn:hover {
             background-color: #f44336;
+            color: #fff;
         }
 
         .footer {
             padding: 15px;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: flex-end;
         }
 
-        /* Spin UI (당점 선택 UI) */
-        #spin-ui-container {
+        /* Optics Formula Panel */
+        #optics-panel {
             pointer-events: auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: rgba(0, 0, 0, 0.6);
-            padding: 10px;
-            border-radius: 10px;
-            border: 2px solid #555;
+            background-color: rgba(0, 0, 0, 0.85);
+            border: 1px solid #0ff;
+            border-radius: 8px;
+            padding: 15px;
+            width: 250px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+            color: #0ff;
         }
 
-        #spin-ui-title {
+        #optics-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+            border-bottom: 1px solid #0ff;
+            padding-bottom: 5px;
+        }
+
+        #optics-formula {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        #optics-desc {
             font-size: 0.8rem;
-            margin-bottom: 5px;
             color: #ccc;
+            line-height: 1.4;
         }
-
-        #spin-ball {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #fff, #ccc 40%, #888);
-            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.5), 0 5px 10px rgba(0,0,0,0.5);
-        }
-
-        .spin-point {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background-color: rgba(255, 0, 0, 0.3);
-            border: 1px solid red;
-            transform: translate(-50%, -50%);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .spin-point.active {
-            background-color: rgba(255, 0, 0, 0.8);
-            box-shadow: 0 0 10px red;
-            transform: translate(-50%, -50%) scale(1.2);
-        }
-
-        /* Positions for spin points (상, 중, 하, 좌, 우) */
-        #spin-top { top: 15%; left: 50%; }
-        #spin-center { top: 50%; left: 50%; }
-        #spin-bottom { top: 85%; left: 50%; }
-        #spin-left { top: 50%; left: 15%; }
-        #spin-right { top: 50%; left: 85%; }
 
         /* Next Stage Banner */
         #message-banner {
@@ -144,20 +141,22 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.85);
-            padding: 20px 40px;
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 30px 50px;
             border-radius: 10px;
             text-align: center;
             display: none;
             pointer-events: auto;
-            border: 2px solid #4CAF50;
+            border: 2px solid #0f0;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
         }
 
         #message-text {
             font-size: 1.5rem;
             font-weight: bold;
-            color: #4CAF50;
-            margin-bottom: 15px;
+            color: #0f0;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #0f0;
         }
     </style>
 </head>
@@ -168,30 +167,23 @@
     <div id="ui-layer">
         <div class="header">
             <div>
-                <div id="stage-title">Stage 1: 입사각과 반사각</div>
-                <div id="stage-desc">쿠션을 맞추고 빨간 공을 맞추세요.</div>
+                <div id="stage-title">Stage 1: 거울 반사 (Reflection)</div>
+                <div id="stage-desc">거울을 배치하여 레이저를 디텍터(목표)에 도달시키세요.</div>
             </div>
-            <button id="reset-btn" class="btn">다시 하기</button>
+            <button id="reset-btn" class="btn">초기화</button>
         </div>
 
         <div class="footer">
-            <div style="flex: 1;"></div> <!-- Spacer -->
-
-            <div id="spin-ui-container">
-                <div id="spin-ui-title">당점 선택</div>
-                <div id="spin-ball">
-                    <div class="spin-point" id="spin-top" data-spin="top"></div>
-                    <div class="spin-point active" id="spin-center" data-spin="center"></div>
-                    <div class="spin-point" id="spin-bottom" data-spin="bottom"></div>
-                    <div class="spin-point" id="spin-left" data-spin="left"></div>
-                    <div class="spin-point" id="spin-right" data-spin="right"></div>
-                </div>
+            <div id="optics-panel">
+                <h3>광학 원리 (Optics Principle)</h3>
+                <div id="optics-formula">θi = θr</div>
+                <div id="optics-desc">반사의 법칙: 매질의 경계면에서 반사될 때, 입사각과 반사각은 법선을 기준으로 항상 같습니다.</div>
             </div>
         </div>
     </div>
 
     <div id="message-banner">
-        <div id="message-text">클리어!</div>
+        <div id="message-text">Signal Detected! (클리어)</div>
         <button id="next-stage-btn" class="btn">다음 스테이지</button>
     </div>
 
@@ -200,6 +192,8 @@
  * -------------------------------------------------------------
  * 2D Vector Math Library
  * -------------------------------------------------------------
+ * Provides basic vector operations essential for optics calculations
+ * like reflection (dot product) and refraction.
  */
 class Vec2 {
     constructor(x, y) {
@@ -215,180 +209,444 @@ class Vec2 {
         return m === 0 ? new Vec2(0, 0) : new Vec2(this.x / m, this.y / m);
     }
     dot(v) { return this.x * v.x + this.y * v.y; }
+    cross(v) { return this.x * v.y - this.y * v.x; } // 2D cross product equivalent (returns scalar)
     dist(v) { return this.sub(v).mag(); }
     copy() { return new Vec2(this.x, this.y); }
-}
-
-/**
- * -------------------------------------------------------------
- * Game Entities
- * -------------------------------------------------------------
- */
-class Ball {
-    constructor(x, y, radius, color, isCue = false) {
-        this.pos = new Vec2(x, y);
-        this.vel = new Vec2(0, 0);
-        this.radius = radius;
-        this.color = color;
-        this.isCue = isCue;
-        this.mass = 1;
-
-        // Spin related (for stage 3)
-        // positive = topspin, negative = backspin
-        this.spin = 0;
-        this.spinDir = new Vec2(0, 0); // Direction spin was applied from (the shot direction)
-    }
-
-    update(dt) {
-        // Apply friction
-        const friction = 0.985;
-        this.vel = this.vel.mult(friction);
-
-        // Apply spin effect using the initial spin direction, not current movement direction
-        // This prevents the backspin force from flipping when the ball starts rolling backward
-        if (Math.abs(this.spin) > 0.1 && this.spinDir.mag() > 0) {
-            let spinForce = this.spinDir.mult(this.spin * 0.1);
-            this.vel = this.vel.add(spinForce);
-
-            // Decay spin
-            this.spin *= 0.95;
-        } else {
-            this.spin = 0;
-        }
-
-        // Stop completely if very slow
-        if (this.vel.mag() < 0.1 && Math.abs(this.spin) < 0.5) {
-            this.vel.x = 0;
-            this.vel.y = 0;
-            this.spin = 0;
-        }
-
-        // Move
-        this.pos = this.pos.add(this.vel);
-    }
-
-    draw(ctx) {
-        ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
-
-        // Gradient for 3D look
-        let grad = ctx.createRadialGradient(
-            this.pos.x - this.radius*0.3, this.pos.y - this.radius*0.3, this.radius*0.1,
-            this.pos.x, this.pos.y, this.radius
+    // Rotate vector by angle (in radians)
+    rotate(angle) {
+        let cosA = Math.cos(angle);
+        let sinA = Math.sin(angle);
+        return new Vec2(
+            this.x * cosA - this.y * sinA,
+            this.x * sinA + this.y * cosA
         );
-        grad.addColorStop(0, '#fff');
-        grad.addColorStop(0.3, this.color);
-        grad.addColorStop(1, '#000');
-
-        ctx.fillStyle = grad;
-        ctx.fill();
-        ctx.closePath();
-
-        // Draw a dot on cue ball to visualize spin (optional)
-        if (this.isCue && Math.abs(this.spin) > 0) {
-            ctx.beginPath();
-            ctx.arc(this.pos.x, this.pos.y, 3, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255,0,0,0.5)';
-            ctx.fill();
-            ctx.closePath();
-        }
     }
 }
 
-class Pocket {
-    constructor(x, y, radius) {
+/**
+ * -------------------------------------------------------------
+ * Optics Entities & Physics Engine
+ * -------------------------------------------------------------
+ */
+
+// Represents a single segment of a laser beam
+class BeamSegment {
+    constructor(start, end, intensity = 1.0, color = '#0f0') {
+        this.start = start; // Vec2
+        this.end = end;     // Vec2
+        this.intensity = intensity; // 0.0 to 1.0
+        this.color = color;
+    }
+
+    draw(ctx) {
+        if (this.intensity < 0.05) return;
+        ctx.beginPath();
+        ctx.moveTo(this.start.x, this.start.y);
+        ctx.lineTo(this.end.x, this.end.y);
+
+        // Intensity affects opacity and thickness
+        let alpha = Math.max(0.2, this.intensity);
+        ctx.strokeStyle = `rgba(0, 255, 0, ${alpha})`;
+        ctx.lineWidth = 2 + (this.intensity * 2);
+
+        // Add glow effect
+        ctx.shadowBlur = 10 * this.intensity;
+        ctx.shadowColor = '#0f0';
+
+        ctx.stroke();
+        ctx.shadowBlur = 0; // Reset
+    }
+}
+
+// Light Source (Laser)
+class LaserSource {
+    constructor(x, y, dirAngle) {
         this.pos = new Vec2(x, y);
-        this.radius = radius;
+        this.dir = new Vec2(Math.cos(dirAngle), Math.sin(dirAngle));
+        this.angle = dirAngle;
+        this.radius = 15;
+        this.isOn = true;
+    }
+
+    // Interactive rotation
+    setDirection(targetPos) {
+        let diff = targetPos.sub(this.pos);
+        this.dir = diff.normalize();
+        this.angle = Math.atan2(this.dir.y, this.dir.x);
     }
 
     draw(ctx) {
         ctx.beginPath();
         ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = '#111';
+        ctx.fillStyle = '#333';
         ctx.fill();
+        ctx.strokeStyle = '#0f0';
         ctx.lineWidth = 2;
-        ctx.strokeStyle = '#000';
         ctx.stroke();
-        ctx.closePath();
+
+        // Draw emission direction indicator
+        ctx.beginPath();
+        ctx.moveTo(this.pos.x, this.pos.y);
+        let nozzleEnd = this.pos.add(this.dir.mult(this.radius + 10));
+        ctx.lineTo(nozzleEnd.x, nozzleEnd.y);
+        ctx.strokeStyle = '#0f0';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+    }
+}
+
+// Detector (Target)
+class Detector {
+    constructor(x, y) {
+        this.pos = new Vec2(x, y);
+        this.radius = 20;
+        this.detectedIntensity = 0;
+        this.requiredIntensity = 0.5; // Threshold to activate
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
+
+        // Color based on activation
+        if (this.detectedIntensity >= this.requiredIntensity) {
+            ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
+            ctx.strokeStyle = '#0f0';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#0f0';
+        } else {
+            ctx.fillStyle = '#222';
+            ctx.strokeStyle = '#555';
+            ctx.shadowBlur = 0;
+        }
+
+        ctx.lineWidth = 3;
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Draw inner sensor
+        ctx.beginPath();
+        ctx.arc(this.pos.x, this.pos.y, this.radius * 0.4, 0, Math.PI * 2);
+        ctx.fillStyle = this.detectedIntensity >= this.requiredIntensity ? '#0f0' : '#444';
+        ctx.fill();
+    }
+}
+
+// Base class for optical components
+class OpticalComponent {
+    constructor(x, y, width, angle) {
+        this.pos = new Vec2(x, y);
+        this.width = width; // Length of the component
+        this.angle = angle; // Angle in radians
+        this.isDraggable = true;
+        this.isRotatable = true;
+        // Calculate endpoints based on center pos and angle
+        this.updateEndpoints();
+    }
+
+    updateEndpoints() {
+        let dir = new Vec2(Math.cos(this.angle), Math.sin(this.angle));
+        let halfLen = dir.mult(this.width / 2);
+        this.p1 = this.pos.sub(halfLen);
+        this.p2 = this.pos.add(halfLen);
+
+        // Normal vector (perpendicular to surface)
+        this.normal = new Vec2(-Math.sin(this.angle), Math.cos(this.angle));
+    }
+
+    setPosition(x, y) {
+        this.pos = new Vec2(x, y);
+        this.updateEndpoints();
+    }
+
+    setAngle(angle) {
+        this.angle = angle;
+        this.updateEndpoints();
+    }
+
+    // Handles line segment intersection
+    // Returns {hit: true/false, point: Vec2, normal: Vec2, distance: number}
+    intersect(rayOrigin, rayDir) {
+        // Ray-Line segment intersection logic
+        let v1 = rayOrigin.sub(this.p1);
+        let v2 = this.p2.sub(this.p1);
+        let v3 = new Vec2(-rayDir.y, rayDir.x);
+
+        let dot = v2.dot(v3);
+        if (Math.abs(dot) < 0.0001) return null; // Parallel
+
+        let t1 = v2.cross(v1) / dot;
+        let t2 = rayDir.dot(new Vec2(v1.y, -v1.x)) / dot; // Equivalent to v1 x rayDir
+
+        if (t1 >= 0.1 && t2 >= 0 && t2 <= 1) { // t1 >= 0.1 to avoid self-intersection
+            let hitPoint = rayOrigin.add(rayDir.mult(t1));
+            // Ensure normal faces the incoming ray
+            let n = this.normal.copy();
+            if (rayDir.dot(n) > 0) {
+                n = n.mult(-1);
+            }
+            return {
+                hit: true,
+                point: hitPoint,
+                normal: n,
+                distance: t1
+            };
+        }
+        return null;
+    }
+
+    // To be overridden by subclasses
+    interact(rayDir, hitData, intensity) {
+        return []; // Returns array of new rays {origin, dir, intensity}
+    }
+
+    draw(ctx) {
+        // Base draw, overridden by subclass
+    }
+}
+
+// 1. Mirror: Reflects 100% of light
+class Mirror extends OpticalComponent {
+    constructor(x, y, width, angle) {
+        super(x, y, width, angle);
+    }
+
+    // Reflection Law: r = d - 2(d \cdot n)n
+    interact(rayDir, hitData, intensity) {
+        let n = hitData.normal;
+        let dot = rayDir.dot(n);
+        let reflectDir = rayDir.sub(n.mult(2 * dot)).normalize();
+
+        return [{
+            origin: hitData.point,
+            dir: reflectDir,
+            intensity: intensity
+        }];
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.moveTo(this.p1.x, this.p1.y);
+        ctx.lineTo(this.p2.x, this.p2.y);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        // Draw non-reflective back side
+        let backDir = this.normal.mult(-3);
+        ctx.beginPath();
+        ctx.moveTo(this.p1.x + backDir.x, this.p1.y + backDir.y);
+        ctx.lineTo(this.p2.x + backDir.x, this.p2.y + backDir.y);
+        ctx.strokeStyle = '#555';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+    }
+}
+
+// 2. Glass (Refraction Medium): Snell's Law
+class Glass extends OpticalComponent {
+    constructor(x, y, width, angle, index = 1.5) {
+        super(x, y, width, angle);
+        this.index = index; // Refractive index (Air is approx 1.0)
+    }
+
+    // Snell's Law: n1 * sin(theta1) = n2 * sin(theta2)
+    // Using vector form of refraction
+    interact(rayDir, hitData, intensity) {
+        // Determine if entering or exiting
+        let n1 = 1.0; // Air
+        let n2 = this.index; // Medium
+        let n = hitData.normal;
+
+        let cosI = -rayDir.dot(n);
+
+        // If ray is inside medium and hitting boundary to exit
+        if (cosI < 0) {
+            n1 = this.index;
+            n2 = 1.0;
+            n = n.mult(-1);
+            cosI = -rayDir.dot(n);
+        }
+
+        let eta = n1 / n2;
+        let sinT2 = eta * eta * (1.0 - cosI * cosI);
+
+        // Total Internal Reflection (TIR)
+        if (sinT2 > 1.0) {
+            // Reflect entirely
+            let reflectDir = rayDir.add(n.mult(2 * cosI)).normalize();
+            return [{ origin: hitData.point, dir: reflectDir, intensity: intensity }];
+        }
+
+        // Refraction
+        let cosT = Math.sqrt(1.0 - sinT2);
+        let refractDir = rayDir.mult(eta).add(n.mult(eta * cosI - cosT)).normalize();
+
+        // Note: For a realistic block of glass, it has thickness.
+        // For this 2D line-based abstraction, we just bend the ray once.
+        // In a real simulation, we'd need a polygon to calculate entering and exiting.
+        // For simplicity in this prototype, we treat it as an infinitely thin phase-shift boundary
+        // or just apply the bend. To make it educational, we'll just bend it.
+        return [{
+            origin: hitData.point,
+            dir: refractDir,
+            intensity: intensity * 0.95 // Small absorption
+        }];
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.moveTo(this.p1.x, this.p1.y);
+        ctx.lineTo(this.p2.x, this.p2.y);
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
+        ctx.lineWidth = 15;
+        ctx.stroke();
+
+        ctx.strokeStyle = '#0ff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+}
+
+// 3. Beam Splitter: 50% Reflection, 50% Transmission
+class BeamSplitter extends OpticalComponent {
+    constructor(x, y, width, angle) {
+        super(x, y, width, angle);
+    }
+
+    interact(rayDir, hitData, intensity) {
+        let n = hitData.normal;
+        let dot = rayDir.dot(n);
+
+        // Reflected ray
+        let reflectDir = rayDir.sub(n.mult(2 * dot)).normalize();
+
+        // Transmitted ray (continues straight)
+        let transmitDir = rayDir.copy();
+
+        return [
+            { origin: hitData.point, dir: reflectDir, intensity: intensity * 0.5 },
+            { origin: hitData.point, dir: transmitDir, intensity: intensity * 0.5 }
+        ];
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.moveTo(this.p1.x, this.p1.y);
+        ctx.lineTo(this.p2.x, this.p2.y);
+
+        // Dashed line for beam splitter
+        ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = '#aaa';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Slightly transparent background
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 10;
+        ctx.stroke();
     }
 }
 
 /**
  * -------------------------------------------------------------
- * Physics Engine Functions
+ * Ray Tracing Engine
  * -------------------------------------------------------------
  */
+function traceRays(sources, components, detectors, maxBounces = 10) {
+    let beams = [];
 
-// Handle collision between a ball and table boundaries (cushions)
-function resolveWallCollision(ball, tableRect) {
-    let bounced = false;
+    // Reset detectors
+    detectors.forEach(d => d.detectedIntensity = 0);
 
-    // Left
-    if (ball.pos.x - ball.radius < tableRect.x) {
-        ball.pos.x = tableRect.x + ball.radius;
-        ball.vel.x *= -0.9; // Restitution
-        bounced = true;
+    let raysToProcess = [];
+
+    // Initialize rays from all active sources
+    sources.forEach(source => {
+        if (source.isOn) {
+            raysToProcess.push({
+                origin: source.pos,
+                dir: source.dir,
+                intensity: 1.0,
+                bounces: 0
+            });
+        }
+    });
+
+    // Process rays iteratively (Breadth-First Ray Tracing)
+    while (raysToProcess.length > 0) {
+        let currentRay = raysToProcess.shift();
+
+        if (currentRay.bounces > maxBounces || currentRay.intensity < 0.05) continue;
+
+        let closestHit = null;
+        let minDistance = Infinity;
+
+        // 1. Check intersection with components
+        for (let comp of components) {
+            let hitData = comp.intersect(currentRay.origin, currentRay.dir);
+            if (hitData && hitData.distance < minDistance) {
+                minDistance = hitData.distance;
+                closestHit = { type: 'component', comp: comp, data: hitData };
+            }
+        }
+
+        // 2. Check intersection with detectors (circle intersection)
+        for (let det of detectors) {
+            // Ray-circle intersection
+            let v = currentRay.origin.sub(det.pos);
+            let b = 2 * v.dot(currentRay.dir);
+            let c = v.dot(v) - det.radius * det.radius;
+            let discriminant = b*b - 4*c;
+
+            if (discriminant >= 0) {
+                let t = (-b - Math.sqrt(discriminant)) / 2;
+                if (t >= 0.1 && t < minDistance) {
+                    minDistance = t;
+                    closestHit = { type: 'detector', det: det, distance: t };
+                }
+            }
+        }
+
+        // 3. Resolve hit or go off screen
+        let endPoint;
+        if (closestHit) {
+            if (closestHit.type === 'component') {
+                endPoint = closestHit.data.point;
+                beams.push(new BeamSegment(currentRay.origin, endPoint, currentRay.intensity));
+
+                // Spawn new rays based on component interaction
+                let newRays = closestHit.comp.interact(currentRay.dir, closestHit.data, currentRay.intensity);
+                newRays.forEach(nr => {
+                    raysToProcess.push({
+                        origin: nr.origin,
+                        dir: nr.dir,
+                        intensity: nr.intensity,
+                        bounces: currentRay.bounces + 1
+                    });
+                });
+            } else if (closestHit.type === 'detector') {
+                endPoint = currentRay.origin.add(currentRay.dir.mult(closestHit.distance));
+                beams.push(new BeamSegment(currentRay.origin, endPoint, currentRay.intensity));
+
+                // Add intensity to detector
+                closestHit.det.detectedIntensity += currentRay.intensity;
+            }
+        } else {
+            // No hit, extend ray off-screen
+            endPoint = currentRay.origin.add(currentRay.dir.mult(2000));
+            beams.push(new BeamSegment(currentRay.origin, endPoint, currentRay.intensity));
+        }
     }
-    // Right
-    else if (ball.pos.x + ball.radius > tableRect.x + tableRect.w) {
-        ball.pos.x = tableRect.x + tableRect.w - ball.radius;
-        ball.vel.x *= -0.9;
-        bounced = true;
-    }
-    // Top
-    if (ball.pos.y - ball.radius < tableRect.y) {
-        ball.pos.y = tableRect.y + ball.radius;
-        ball.vel.y *= -0.9;
-        bounced = true;
-    }
-    // Bottom
-    else if (ball.pos.y + ball.radius > tableRect.y + tableRect.h) {
-        ball.pos.y = tableRect.y + tableRect.h - ball.radius;
-        ball.vel.y *= -0.9;
-        bounced = true;
-    }
 
-    return bounced;
-}
-
-// Check and resolve collision between two balls (Elastic collision)
-function resolveBallCollision(ball1, ball2) {
-    let delta = ball1.pos.sub(ball2.pos);
-    let dist = delta.mag();
-    let minDist = ball1.radius + ball2.radius;
-
-    if (dist < minDist) {
-        // Resolve interpenetration
-        let overlap = minDist - dist;
-        let correction = delta.normalize().mult(overlap / 2);
-        ball1.pos = ball1.pos.add(correction);
-        ball2.pos = ball2.pos.sub(correction);
-
-        // Calculate new velocities (conservation of momentum)
-        let n = delta.normalize(); // Collision normal
-        let relVel = ball1.vel.sub(ball2.vel);
-        let speed = relVel.dot(n);
-
-        // If moving apart, do nothing
-        if (speed > 0) return true;
-
-        // Restitution (elasticity) - Billiard balls are highly elastic
-        let e = 0.95;
-
-        let impulseStr = -(1 + e) * speed / (1/ball1.mass + 1/ball2.mass);
-        let impulse = n.mult(impulseStr);
-
-        ball1.vel = ball1.vel.add(impulse.mult(1/ball1.mass));
-        ball2.vel = ball2.vel.sub(impulse.mult(1/ball2.mass));
-
-        return true; // Collision occurred
-    }
-    return false;
+    return beams;
 }
 
 /**
  * -------------------------------------------------------------
- * Game State and Slingshot Mechanic
+ * Game State and Input Handling
  * -------------------------------------------------------------
  */
 const canvas = document.getElementById('gameCanvas');
@@ -404,40 +662,29 @@ window.addEventListener('resize', () => {
     ch = window.innerHeight;
     canvas.width = cw;
     canvas.height = ch;
-    // We should ideally reposition things on resize, but for this prototype, simple resize is ok
 });
 
 // Game State variables
-let state = 'aiming'; // 'aiming', 'rolling', 'end'
+let state = 'playing'; // 'playing', 'end'
 let currentStage = 1;
-let balls = [];
-let pockets = [];
-let cueBall = null;
 
-// Table boundaries (leaving some margin for the UI)
-let tableRect = {
-    x: 20,
-    y: 100, // below header
-    w: cw - 40,
-    h: ch - 250 // above footer
-};
+let lasers = [];
+let components = [];
+let detectors = [];
+let activeBeams = [];
 
-// Slingshot variables
-let dragStart = null;
-let dragCurrent = null;
-let maxDragDist = 150;
-let selectedSpin = 'center';
+// Drag & Drop State
+let draggedComponent = null;
+let dragOffset = new Vec2(0, 0);
+let isRotating = false;
 
-// Spin UI Logic
-document.querySelectorAll('.spin-point').forEach(el => {
-    el.addEventListener('click', (e) => {
-        document.querySelectorAll('.spin-point').forEach(p => p.classList.remove('active'));
-        e.target.classList.add('active');
-        selectedSpin = e.target.dataset.spin;
-    });
-});
+function updateOpticsPanel(title, formula, desc) {
+    document.querySelector('#optics-panel h3').innerText = title;
+    document.getElementById('optics-formula').innerText = formula;
+    document.getElementById('optics-desc').innerText = desc;
+}
 
-// Input handling (Touch & Mouse)
+// Input handling
 function getPointerPos(e) {
     if (e.touches && e.touches.length > 0) {
         return new Vec2(e.touches[0].clientX, e.touches[0].clientY);
@@ -446,188 +693,149 @@ function getPointerPos(e) {
 }
 
 function handleStart(e) {
-    if (state !== 'aiming' || e.target !== canvas) return;
-    dragStart = getPointerPos(e);
-    dragCurrent = dragStart.copy();
+    if (state !== 'playing' || e.target !== canvas) return;
+    let pos = getPointerPos(e);
+
+    // Check if dragging a component
+    for (let comp of components) {
+        if (!comp.isDraggable) continue;
+
+        // Simple distance check to center
+        if (pos.dist(comp.pos) < 30) {
+            draggedComponent = comp;
+            dragOffset = comp.pos.sub(pos);
+            // Right click/two fingers could trigger rotation, for simple UX we rotate on click near edge
+            return;
+        }
+
+        // Check if clicking near edge for rotation
+        if (pos.dist(comp.p1) < 20 || pos.dist(comp.p2) < 20) {
+            draggedComponent = comp;
+            isRotating = true;
+            return;
+        }
+    }
 }
 
 function handleMove(e) {
-    if (state !== 'aiming' || !dragStart) return;
-    dragCurrent = getPointerPos(e);
+    if (state !== 'playing' || !draggedComponent) return;
+    let pos = getPointerPos(e);
+
+    if (isRotating) {
+        // Rotate component to face pointer
+        let diff = pos.sub(draggedComponent.pos);
+        let angle = Math.atan2(diff.y, diff.x);
+        draggedComponent.setAngle(angle);
+    } else {
+        // Move component
+        let newPos = pos.add(dragOffset);
+        draggedComponent.setPosition(newPos.x, newPos.y);
+    }
 }
 
 function handleEnd(e) {
-    if (state !== 'aiming' || !dragStart) return;
-
-    let dragVec = dragStart.sub(dragCurrent);
-    if (dragVec.mag() > 5) {
-        // Shoot!
-        let force = Math.min(dragVec.mag() / maxDragDist, 1.0) * 20; // Max speed 20
-        let shootDir = dragVec.normalize();
-        cueBall.vel = shootDir.mult(force);
-
-        // Apply spin based on selection
-        cueBall.spinDir = shootDir.copy(); // Record the original shot direction for spin
-        if (selectedSpin === 'bottom') {
-            // Strong backspin relative to shot power
-            cueBall.spin = -force * 0.8;
-        } else if (selectedSpin === 'top') {
-            cueBall.spin = force * 0.5;
-        } else {
-            cueBall.spin = 0;
-        }
-
-        state = 'rolling';
-    }
-
-    dragStart = null;
-    dragCurrent = null;
+    draggedComponent = null;
+    isRotating = false;
 }
 
 canvas.addEventListener('mousedown', handleStart);
 canvas.addEventListener('mousemove', handleMove);
-window.addEventListener('mouseup', handleEnd); // Use window to catch release outside
+window.addEventListener('mouseup', handleEnd);
 
 canvas.addEventListener('touchstart', handleStart, {passive: false});
 canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault(); // Prevent scrolling
+    e.preventDefault();
     handleMove(e);
 }, {passive: false});
 window.addEventListener('touchend', handleEnd);
 
 /**
  * -------------------------------------------------------------
- * Trajectory Prediction
- * -------------------------------------------------------------
- */
-/**
- * -------------------------------------------------------------
  * Stages and Game Logic
  * -------------------------------------------------------------
  */
 function loadStage(stageNum) {
-    balls = [];
-    pockets = [];
-    state = 'aiming';
+    lasers = [];
+    components = [];
+    detectors = [];
+    state = 'playing';
     currentStage = stageNum;
     document.getElementById('message-banner').style.display = 'none';
 
-    let cx = tableRect.x + tableRect.w / 2;
-    let cy = tableRect.y + tableRect.h / 2;
+    let cx = cw / 2;
+    let cy = ch / 2;
 
     if (stageNum === 1) {
-        document.getElementById('stage-title').innerText = "Stage 1: 입사각과 반사각";
-        document.getElementById('stage-desc').innerText = "벽을 한 번 맞추고 빨간 공을 맞추세요.";
+        document.getElementById('stage-title').innerText = "Stage 1: 거울 반사 (Reflection)";
+        document.getElementById('stage-desc').innerText = "거울의 중심이나 끝을 드래그하여 각도를 맞춰 레이저를 목표에 도달시키세요.";
+        updateOpticsPanel("반사의 법칙", "θi = θr", "매질의 경계면에서 반사될 때, 입사각과 반사각은 법선을 기준으로 항상 같습니다.");
 
-        cueBall = new Ball(cx, tableRect.y + tableRect.h - 100, 15, '#fff', true);
-        let targetBall = new Ball(cx, tableRect.y + 100, 15, '#f00');
+        lasers.push(new LaserSource(cx - 300, cy, 0)); // Pointing right
+        detectors.push(new Detector(cx, cy - 200));
 
-        // Add obstacle so direct hit is impossible
-        balls.push(targetBall);
-        balls.push(cueBall);
+        // Add one draggable mirror
+        let mirror = new Mirror(cx, cy, 100, Math.PI / 4);
+        components.push(mirror);
 
     } else if (stageNum === 2) {
-        document.getElementById('stage-title').innerText = "Stage 2: 분리각 (운동량 보존)";
-        document.getElementById('stage-desc').innerText = "공을 비스듬히 맞춰 두 공을 각각 포켓에 넣으세요.";
+        document.getElementById('stage-title').innerText = "Stage 2: 굴절 (Snell's Law)";
+        document.getElementById('stage-desc').innerText = "유리 매질을 통과할 때 빛이 꺾이는 각도를 이용해 목표에 도달시키세요.";
+        updateOpticsPanel("스넬의 법칙", "n1·sin(θ1) = n2·sin(θ2)", "빛이 서로 다른 매질을 통과할 때 굴절률(n)의 차이에 의해 진행 방향이 꺾입니다.");
 
-        cueBall = new Ball(cx, tableRect.y + tableRect.h - 100, 15, '#fff', true);
-        let targetBall = new Ball(cx, cy, 15, '#f00');
+        lasers.push(new LaserSource(cx - 300, cy - 100, 0)); // Pointing right
+        detectors.push(new Detector(cx + 300, cy + 100)); // Offset due to refraction
 
-        balls.push(targetBall);
-        balls.push(cueBall);
-
-        // Add two pockets
-        pockets.push(new Pocket(tableRect.x + 40, tableRect.y + 40, 25)); // Top left
-        pockets.push(new Pocket(tableRect.x + tableRect.w - 40, tableRect.y + 40, 25)); // Top right
+        // Add a block of glass (high refractive index)
+        let glass = new Glass(cx, cy, 300, Math.PI / 2, 1.8);
+        components.push(glass);
 
     } else if (stageNum === 3) {
-        document.getElementById('stage-title').innerText = "Stage 3: 마찰력과 회전 (끌어치기)";
-        document.getElementById('stage-desc').innerText = "하단 당점을 주고 빨간 공을 맞춘 뒤 돌아와서 노란 공을 맞추세요.";
+        document.getElementById('stage-title').innerText = "Stage 3: 광 분배기 (Beam Splitter)";
+        document.getElementById('stage-desc').innerText = "빔 스플리터를 이용해 빛을 50:50으로 나누어 두 개의 목표를 동시에 켜세요.";
+        updateOpticsPanel("파동 광학: 분배", "I_out = I_in / 2", "빔 스플리터는 빛의 절반을 투과시키고 절반을 반사시킵니다.");
 
-        cueBall = new Ball(cx, tableRect.y + tableRect.h - 100, 15, '#fff', true);
-        let targetBall = new Ball(cx, cy - 50, 15, '#f00');
-        let secondTarget = new Ball(cx, tableRect.y + tableRect.h - 30, 15, '#ff0');
+        lasers.push(new LaserSource(cx - 300, cy, 0));
+        detectors.push(new Detector(cx, cy - 200)); // Top
+        detectors.push(new Detector(cx + 300, cy)); // Right
 
-        balls.push(targetBall);
-        balls.push(secondTarget);
-        balls.push(cueBall);
+        let splitter = new BeamSplitter(cx, cy, 150, Math.PI / 4);
+        components.push(splitter);
 
-        // Select bottom spin automatically for hint
-        document.querySelectorAll('.spin-point').forEach(p => p.classList.remove('active'));
-        document.getElementById('spin-bottom').classList.add('active');
-        selectedSpin = 'bottom';
     } else if (stageNum === 4) {
-        // Stage 4: Topspin (밀어치기)
-        document.getElementById('stage-title').innerText = "Stage 4: 회전 관성 (밀어치기)";
-        document.getElementById('stage-desc').innerText = "상단 당점을 주고 빨간 공을 맞춘 뒤 앞으로 밀고 나가 노란 공을 맞추세요.";
+        document.getElementById('stage-title').innerText = "Stage 4: Optical AND Gate";
+        document.getElementById('stage-desc').innerText = "빔 스플리터를 역으로 활용해 두 빛이 겹치게 하여 임계치 이상이 되도록 하세요.";
+        updateOpticsPanel("광학 논리 게이트", "AND Gate", "디텍터의 요구 강도가 높습니다. 두 개의 광원 신호가 합쳐져야만 활성화됩니다.");
 
-        cueBall = new Ball(cx, tableRect.y + tableRect.h - 100, 15, '#fff', true);
-        let targetBall = new Ball(cx, cy, 15, '#f00'); // First target
-        let secondTarget = new Ball(cx, tableRect.y + 100, 15, '#ff0'); // Second target directly ahead
+        lasers.push(new LaserSource(cx - 300, cy, 0)); // Laser A
+        lasers.push(new LaserSource(cx, cy + 300, -Math.PI/2)); // Laser B
 
-        balls.push(targetBall);
-        balls.push(secondTarget);
-        balls.push(cueBall);
+        let det = new Detector(cx + 300, cy);
+        det.requiredIntensity = 0.8; // Requires combination of two split beams
+        detectors.push(det);
 
-        // Select top spin automatically for hint
-        document.querySelectorAll('.spin-point').forEach(p => p.classList.remove('active'));
-        document.getElementById('spin-top').classList.add('active');
-        selectedSpin = 'top';
-    } else if (stageNum === 5) {
-        // Stage 5: Multi-cushion
-        document.getElementById('stage-title').innerText = "Stage 5: 다중 쿠션";
-        document.getElementById('stage-desc').innerText = "쿠션을 2번 이상 맞춘 후 빨간 공을 맞추세요.";
+        let splitter = new BeamSplitter(cx, cy, 100, -Math.PI / 4);
+        components.push(splitter);
 
-        // Position cue ball near bottom left, target near top right
-        cueBall = new Ball(tableRect.x + 100, tableRect.y + tableRect.h - 100, 15, '#fff', true);
-        let targetBall = new Ball(tableRect.x + tableRect.w - 100, tableRect.y + 100, 15, '#f00');
-
-        balls.push(targetBall);
-        balls.push(cueBall);
-
-        // Select center spin
-        document.querySelectorAll('.spin-point').forEach(p => p.classList.remove('active'));
-        document.getElementById('spin-center').classList.add('active');
-        selectedSpin = 'center';
-    }
-}
-
-// Win conditions
-let stage1HitWall = false;
-let hitRedFirst = false; // Used for Stage 3 & 4
-let cushionHits = 0; // Number of cushion hits during the current shot
-
-function checkWinCondition() {
-    if (currentStage === 1) {
-        // Did we hit wall then target? (Checked in game loop)
-    } else if (currentStage === 2) {
-        // Are both balls in pockets?
-        let activeBalls = balls.filter(b => b.active !== false);
-        if (activeBalls.length === 0) {
-            showClearMessage();
-        } else if (activeBalls.length < balls.length && state === 'aiming') {
-            // Failed, reset
-            loadStage(currentStage);
-        }
-    } else if (currentStage === 3) {
-        // (Checked in game loop)
+        // Add a mirror to help redirect if needed
+        components.push(new Mirror(cx - 100, cy - 200, 100, 0));
     }
 }
 
 function showClearMessage() {
+    if (state === 'end') return;
     state = 'end';
     document.getElementById('message-banner').style.display = 'block';
-    if (currentStage >= 5) {
-        document.getElementById('message-text').innerText = "모든 스테이지 클리어!";
+    if (currentStage >= 4) {
+        document.getElementById('message-text').innerText = "모든 스테이지 클리어! (포토닉스 마스터)";
         document.getElementById('next-stage-btn').innerText = "처음부터";
     } else {
-        document.getElementById('message-text').innerText = "클리어!";
+        document.getElementById('message-text').innerText = "Signal Detected! (클리어)";
         document.getElementById('next-stage-btn').innerText = "다음 스테이지";
     }
 }
 
 document.getElementById('next-stage-btn').addEventListener('click', () => {
-    if (currentStage >= 5) {
+    if (currentStage >= 4) {
         loadStage(1);
     } else {
         loadStage(currentStage + 1);
@@ -638,229 +846,60 @@ document.getElementById('reset-btn').addEventListener('click', () => {
     loadStage(currentStage);
 });
 
-function drawTrajectory(ctx) {
-    if (!dragStart || !dragCurrent || state !== 'aiming') return;
-
-    let dragVec = dragStart.sub(dragCurrent);
-    if (dragVec.mag() <= 5) return;
-
-    let dir = dragVec.normalize();
-
-    // Simulate path
-    let simPos = cueBall.pos.copy();
-    let simVel = dir.mult(10); // arbitrary speed for simulation steps
-
-    ctx.beginPath();
-    ctx.moveTo(simPos.x, simPos.y);
-
-    let hitWall = false;
-    let hitBall = false;
-    let maxSteps = 100;
-
-    // Raycast simulation
-    for (let i = 0; i < maxSteps; i++) {
-        simPos = simPos.add(simVel);
-        ctx.lineTo(simPos.x, simPos.y);
-
-        // Check wall collision
-        if (simPos.x - cueBall.radius < tableRect.x) { simVel.x *= -1; hitWall = true; }
-        else if (simPos.x + cueBall.radius > tableRect.x + tableRect.w) { simVel.x *= -1; hitWall = true; }
-
-        if (simPos.y - cueBall.radius < tableRect.y) { simVel.y *= -1; hitWall = true; }
-        else if (simPos.y + cueBall.radius > tableRect.y + tableRect.h) { simVel.y *= -1; hitWall = true; }
-
-        if (hitWall) {
-            // Draw bounce and stop after one bounce for simplicity,
-            // but the prompt says "show bounce", let's continue a bit
-            // To prevent infinite bounce in corner, break if it hits twice
-        }
-
-        // Check ball collision
-        for (let j = 0; j < balls.length; j++) {
-            let b = balls[j];
-            if (b.isCue) continue;
-
-            if (simPos.dist(b.pos) < cueBall.radius + b.radius) {
-                hitBall = true;
-
-                // Draw target ball ghost
-                ctx.arc(simPos.x, simPos.y, cueBall.radius, 0, Math.PI * 2);
-
-                // Draw separation lines (Ghost ball to target ball center)
-                let n = simPos.sub(b.pos).normalize();
-
-                // Target ball velocity direction will be along -n
-                ctx.moveTo(b.pos.x, b.pos.y);
-                let targetVel = n.mult(-50); // visual length
-                ctx.lineTo(b.pos.x + targetVel.x, b.pos.y + targetVel.y);
-
-                break;
-            }
-        }
-
-        if (hitBall) break;
-    }
-
-    ctx.setLineDash([5, 5]);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.closePath();
-}
-
 /**
  * -------------------------------------------------------------
  * Game Loop (Update & Render)
  * -------------------------------------------------------------
  */
 
-let lastTime = 0;
-
-function gameLoop(timestamp) {
-    let dt = timestamp - lastTime;
-    lastTime = timestamp;
-
-    update(dt);
+function gameLoop() {
+    update();
     render(ctx);
-
     requestAnimationFrame(gameLoop);
 }
 
-function update(dt) {
+function update() {
     if (state === 'end') return;
 
-    let isMoving = false;
+    // Run physics/ray tracing
+    activeBeams = traceRays(lasers, components, detectors);
 
-    // Filter active balls
-    let activeBalls = balls.filter(b => b.active !== false);
-
-    // Update balls
-    for (let i = 0; i < activeBalls.length; i++) {
-        let ball = activeBalls[i];
-        ball.update(dt);
-
-        if (ball.vel.mag() > 0) isMoving = true;
-
-        // Wall collisions
-        if (resolveWallCollision(ball, tableRect)) {
-            if (ball.isCue) {
-                cushionHits++;
-                if (currentStage === 1) {
-                    stage1HitWall = true;
-                }
-            }
-        }
-
-        // Pocket collisions
-        for (let p of pockets) {
-            if (ball.pos.dist(p.pos) < p.radius) {
-                ball.active = false; // Hide ball
-                ball.vel = new Vec2(0,0);
-            }
+    // Check Win Condition (All detectors must be active)
+    let allActive = true;
+    for (let det of detectors) {
+        if (det.detectedIntensity < det.requiredIntensity) {
+            allActive = false;
+            break;
         }
     }
 
-    // Ball-Ball Collisions
-    for (let i = 0; i < activeBalls.length; i++) {
-        for (let j = i + 1; j < activeBalls.length; j++) {
-            let b1 = activeBalls[i];
-            let b2 = activeBalls[j];
-
-            if (resolveBallCollision(b1, b2)) {
-                // Stage 1 win condition check: Did the cue ball hit the target ball?
-                // We check if either b1 is cue and b2 is target, or b2 is cue and b1 is target
-                if (currentStage === 1 && ((b1.isCue && !b2.isCue) || (b2.isCue && !b1.isCue))) {
-                    if (stage1HitWall) {
-                        showClearMessage(); // Win condition met
-                    } else {
-                        // Failed, reset the stage
-                        loadStage(1);
-                    }
-                }
-
-                if (currentStage === 3 || currentStage === 4) {
-                    // Target is red ball (#f00), second target is yellow (#ff0)
-                    if (b1.isCue && b2.color === '#f00' || b2.isCue && b1.color === '#f00') {
-                        hitRedFirst = true;
-                    }
-                    if (hitRedFirst && (b1.isCue && b2.color === '#ff0' || b2.isCue && b1.color === '#ff0')) {
-                        showClearMessage();
-                    }
-                }
-
-                if (currentStage === 5) {
-                    // Must hit target ball after 2 or more cushion hits
-                    if (b1.isCue && !b2.isCue || b2.isCue && !b1.isCue) {
-                        if (cushionHits >= 2) {
-                            showClearMessage();
-                        } else {
-                            loadStage(5);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // State Transitions
-    if (state === 'rolling' && !isMoving) {
-        state = 'aiming';
-
-        // Reset flags for new shot regardless of whether they hit or not
-        stage1HitWall = false;
-        hitRedFirst = false; // reset combo
-        cushionHits = 0; // reset cushion hits
-
-        checkWinCondition();
+    if (detectors.length > 0 && allActive) {
+        showClearMessage();
     }
 }
 
 function render(ctx) {
-    // Clear background
-    ctx.fillStyle = '#222';
-    ctx.fillRect(0, 0, cw, ch);
+    // Clear canvas (background handles table pattern via CSS, but we need to clear)
+    ctx.clearRect(0, 0, cw, ch);
 
-    // Draw Table
-    ctx.fillStyle = '#0f6e3c'; // Billiard green
-    ctx.fillRect(tableRect.x, tableRect.y, tableRect.w, tableRect.h);
-
-    // Draw cushions
-    ctx.lineWidth = 10;
-    ctx.strokeStyle = '#0a4a28';
-    ctx.strokeRect(tableRect.x, tableRect.y, tableRect.w, tableRect.h);
-
-    // Draw Pockets
-    for (let p of pockets) {
-        p.draw(ctx);
+    // Draw Beams
+    for (let beam of activeBeams) {
+        beam.draw(ctx);
     }
 
-    // Draw trajectory
-    if (state === 'aiming') {
-        drawTrajectory(ctx);
-
-        // Draw Slingshot UI
-        if (dragStart && dragCurrent) {
-            ctx.beginPath();
-            ctx.moveTo(dragStart.x, dragStart.y);
-            ctx.lineTo(dragCurrent.x, dragCurrent.y);
-            ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
-            ctx.lineWidth = 5;
-            ctx.stroke();
-
-            // Draw pull handle
-            ctx.beginPath();
-            ctx.arc(dragCurrent.x, dragCurrent.y, 15, 0, Math.PI*2);
-            ctx.fillStyle = 'rgba(255,0,0,0.5)';
-            ctx.fill();
-        }
+    // Draw Components
+    for (let comp of components) {
+        comp.draw(ctx);
     }
 
-    // Draw Balls
-    for (let ball of balls) {
-        if (ball.active !== false) {
-            ball.draw(ctx);
-        }
+    // Draw Detectors
+    for (let det of detectors) {
+        det.draw(ctx);
+    }
+
+    // Draw Lasers
+    for (let laser of lasers) {
+        laser.draw(ctx);
     }
 }
 
