@@ -170,12 +170,15 @@
                 <div id="stage-title">Stage 1: 거울 반사 (Reflection)</div>
                 <div id="stage-desc">거울을 배치하여 레이저를 디텍터(목표)에 도달시키세요.</div>
             </div>
-            <button id="reset-btn" class="btn">초기화</button>
+            <div>
+                <button id="lang-btn" class="btn">EN</button>
+                <button id="reset-btn" class="btn">초기화</button>
+            </div>
         </div>
 
         <div class="footer">
             <div id="optics-panel">
-                <h3>광학 원리 (Optics Principle)</h3>
+                <h3 id="optics-panel-title">광학 원리 (Optics Principle)</h3>
                 <div id="optics-formula">θi = θr</div>
                 <div id="optics-desc">반사의 법칙: 매질의 경계면에서 반사될 때, 입사각과 반사각은 법선을 기준으로 항상 같습니다.</div>
             </div>
@@ -188,6 +191,141 @@
     </div>
 
 <script>
+/**
+ * -------------------------------------------------------------
+ * Localization (i18n)
+ * -------------------------------------------------------------
+ */
+const i18n = {
+    ko: {
+        reset: "초기화",
+        langToggle: "EN",
+        stage1Title: "Stage 1: 거울 반사 (Reflection)",
+        stage1Desc: "거울의 중심이나 끝을 드래그하여 각도를 맞춰 레이저를 목표에 도달시키세요.",
+        stage2Title: "Stage 2: 굴절 (Snell's Law)",
+        stage2Desc: "유리 매질을 통과할 때 빛이 꺾이는 각도를 이용해 목표에 도달시키세요.",
+        stage3Title: "Stage 3: 광 분배기 (Beam Splitter)",
+        stage3Desc: "빔 스플리터를 이용해 빛을 50:50으로 나누어 두 개의 목표를 동시에 켜세요.",
+        stage4Title: "Stage 4: Optical AND Gate",
+        stage4Desc: "빔 스플리터를 역으로 활용해 두 빛이 겹치게 하여 임계치 이상이 되도록 하세요.",
+        stage5Title: "Stage 5: Optical OR Gate",
+        stage5Desc: "두 경로 중 하나의 빛만 도달해도 디텍터가 활성화됩니다.",
+        stage6Title: "Stage 6: 마하-젠더 간섭계 라우팅",
+        stage6Desc: "여러 거울과 스플리터를 사용해 빛을 복잡하게 라우팅하여 두 목표를 모두 활성화하세요.",
+        opticsReflectionTitle: "반사의 법칙",
+        opticsReflectionDesc: "매질의 경계면에서 반사될 때, 입사각과 반사각은 법선을 기준으로 항상 같습니다.",
+        opticsSnellTitle: "스넬의 법칙",
+        opticsSnellDesc: "빛이 서로 다른 매질을 통과할 때 굴절률(n)의 차이에 의해 진행 방향이 꺾입니다.",
+        opticsSplitterTitle: "파동 광학: 분배",
+        opticsSplitterDesc: "빔 스플리터는 빛의 절반을 투과시키고 절반을 반사시킵니다.",
+        opticsANDTitle: "광학 논리 게이트",
+        opticsANDDesc: "디텍터의 요구 강도가 높습니다. 두 개의 광원 신호가 합쳐져야만 활성화됩니다.",
+        opticsORTitle: "광학 OR 게이트",
+        opticsORDesc: "디텍터의 요구 강도가 낮습니다. 하나의 신호만 도달해도 활성화됩니다.",
+        opticsRoutingTitle: "광 라우팅",
+        opticsRoutingDesc: "빛의 경로를 여러 갈래로 나누고 다시 모아 원하는 곳으로 전달합니다.",
+        clearAll: "모든 스테이지 클리어! (포토닉스 마스터)",
+        restart: "처음부터",
+        clearStage: "Signal Detected! (클리어)",
+        nextStage: "다음 스테이지",
+        opticsPrinciple: "광학 원리 (Optics Principle)",
+    },
+    en: {
+        reset: "Reset",
+        langToggle: "KR",
+        stage1Title: "Stage 1: Mirror Reflection",
+        stage1Desc: "Drag the center or edge of the mirror to adjust the angle and guide the laser to the target.",
+        stage2Title: "Stage 2: Refraction (Snell's Law)",
+        stage2Desc: "Use the bending angle of light passing through the glass medium to reach the target.",
+        stage3Title: "Stage 3: Beam Splitter",
+        stage3Desc: "Use the beam splitter to divide the light 50:50 and light up two targets simultaneously.",
+        stage4Title: "Stage 4: Optical AND Gate",
+        stage4Desc: "Use the beam splitter in reverse to overlap two lights so the intensity exceeds the threshold.",
+        stage5Title: "Stage 5: Optical OR Gate",
+        stage5Desc: "The detector activates even if light from only one of the paths reaches it.",
+        stage6Title: "Stage 6: Mach-Zehnder Routing",
+        stage6Desc: "Use multiple mirrors and splitters to route light and activate both targets.",
+        opticsReflectionTitle: "Law of Reflection",
+        opticsReflectionDesc: "When reflecting from a medium boundary, the angle of incidence and reflection are always equal relative to the normal.",
+        opticsSnellTitle: "Snell's Law",
+        opticsSnellDesc: "When light passes through different media, its path bends due to the difference in refractive index (n).",
+        opticsSplitterTitle: "Wave Optics: Splitting",
+        opticsSplitterDesc: "A beam splitter transmits half the light and reflects the other half.",
+        opticsANDTitle: "Optical Logic Gate",
+        opticsANDDesc: "The detector's required intensity is high. It only activates when two light signals combine.",
+        opticsORTitle: "Optical OR Gate",
+        opticsORDesc: "The detector's required intensity is low. A single light signal is enough to activate it.",
+        opticsRoutingTitle: "Optical Routing",
+        opticsRoutingDesc: "Split and recombine light paths to deliver signals to the desired destinations.",
+        clearAll: "All Stages Cleared! (Photonics Master)",
+        restart: "Restart",
+        clearStage: "Signal Detected! (Clear)",
+        nextStage: "Next Stage",
+        opticsPrinciple: "Optics Principle",
+    }
+};
+
+let currentLang = 'ko';
+const MAX_STAGES = 6;
+
+function setLanguage(lang) {
+    currentLang = lang;
+    document.getElementById('reset-btn').innerText = i18n[lang].reset;
+    document.getElementById('lang-btn').innerText = i18n[lang].langToggle;
+    document.getElementById('optics-panel-title').innerText = i18n[lang].opticsPrinciple;
+
+    // Update stage texts without reloading the stage
+    updateStageTexts();
+    if (state === 'end') {
+        showClearMessage(true); // Refresh end message language
+    }
+}
+
+function updateStageTexts() {
+    let t = i18n[currentLang];
+    let titleKey = 'stage' + currentStage + 'Title';
+    let descKey = 'stage' + currentStage + 'Desc';
+    let opticsTitleKey = '';
+    let opticsFormula = '';
+    let opticsDescKey = '';
+
+    if (currentStage === 1) {
+        opticsTitleKey = 'opticsReflectionTitle';
+        opticsFormula = 'θi = θr';
+        opticsDescKey = 'opticsReflectionDesc';
+    } else if (currentStage === 2) {
+        opticsTitleKey = 'opticsSnellTitle';
+        opticsFormula = "n1·sin(θ1) = n2·sin(θ2)";
+        opticsDescKey = 'opticsSnellDesc';
+    } else if (currentStage === 3) {
+        opticsTitleKey = 'opticsSplitterTitle';
+        opticsFormula = "I_out = I_in / 2";
+        opticsDescKey = 'opticsSplitterDesc';
+    } else if (currentStage === 4) {
+        opticsTitleKey = 'opticsANDTitle';
+        opticsFormula = "AND Gate";
+        opticsDescKey = 'opticsANDDesc';
+    } else if (currentStage === 5) {
+        opticsTitleKey = 'opticsORTitle';
+        opticsFormula = "OR Gate";
+        opticsDescKey = 'opticsORDesc';
+    } else if (currentStage === 6) {
+        opticsTitleKey = 'opticsRoutingTitle';
+        opticsFormula = "Routing";
+        opticsDescKey = 'opticsRoutingDesc';
+    }
+
+    if (t[titleKey]) document.getElementById('stage-title').innerText = t[titleKey];
+    if (t[descKey]) document.getElementById('stage-desc').innerText = t[descKey];
+    if (t[opticsTitleKey]) updateOpticsPanel(t[opticsTitleKey], opticsFormula, t[opticsDescKey]);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('lang-btn')?.addEventListener('click', () => {
+        setLanguage(currentLang === 'ko' ? 'en' : 'ko');
+    });
+});
+
 /**
  * -------------------------------------------------------------
  * 2D Vector Math Library
@@ -555,83 +693,92 @@ class BeamSplitter extends OpticalComponent {
  * Ray Tracing Engine
  * -------------------------------------------------------------
  */
+/**
+ * Traces rays from all active sources through the scene, interacting with components and detectors.
+ * Functional approach:
+ * - Extracts intersections computation into a pure function `findClosestHit`.
+ * - Uses `reduce` and `map` to find hits.
+ * - Detectors accumulate intensity functionally before updating state.
+ */
 function traceRays(sources, components, detectors, maxBounces = 10) {
     let beams = [];
 
-    // Reset detectors
+    // Reset detectors state
     detectors.forEach(d => d.detectedIntensity = 0);
 
-    let raysToProcess = [];
+    // Initialize processing queue with active sources
+    const raysToProcess = sources
+        .filter(source => source.isOn)
+        .map(source => ({
+            origin: source.pos,
+            dir: source.dir,
+            intensity: 1.0,
+            bounces: 0
+        }));
 
-    // Initialize rays from all active sources
-    sources.forEach(source => {
-        if (source.isOn) {
-            raysToProcess.push({
-                origin: source.pos,
-                dir: source.dir,
-                intensity: 1.0,
-                bounces: 0
-            });
+    // Pure function to calculate detector intersection using quadratic formula
+    const getDetectorIntersection = (ray, det) => {
+        const v = ray.origin.sub(det.pos);
+        const b = 2 * v.dot(ray.dir);
+        const c = v.dot(v) - det.radius * det.radius;
+        const discriminant = b * b - 4 * c;
+
+        if (discriminant >= 0) {
+            const t = (-b - Math.sqrt(discriminant)) / 2;
+            if (t >= 0.1) return t;
         }
-    });
+        return null;
+    };
 
-    // Process rays iteratively (Breadth-First Ray Tracing)
+    // Pure function to find the closest hit for a given ray among all entities
+    const findClosestHit = (ray) => {
+        // Map all components to hit objects, filtering out misses
+        const componentHits = components
+            .map(comp => ({ type: 'component', comp, data: comp.intersect(ray.origin, ray.dir) }))
+            .filter(hit => hit.data !== null)
+            .map(hit => ({ ...hit, distance: hit.data.distance }));
+
+        // Map all detectors to hit objects, filtering out misses
+        const detectorHits = detectors
+            .map(det => ({ type: 'detector', det, distance: getDetectorIntersection(ray, det) }))
+            .filter(hit => hit.distance !== null);
+
+        // Combine all hits and reduce to find the minimum distance hit
+        const allHits = [...componentHits, ...detectorHits];
+
+        return allHits.length > 0 ?
+            allHits.reduce((minHit, currentHit) => currentHit.distance < minHit.distance ? currentHit : minHit) :
+            null;
+    };
+
+    // Iteratively process rays. Though we use a while loop for breadth-first queue processing,
+    // the inner logic is functional.
     while (raysToProcess.length > 0) {
-        let currentRay = raysToProcess.shift();
+        const currentRay = raysToProcess.shift();
 
         if (currentRay.bounces > maxBounces || currentRay.intensity < 0.05) continue;
 
-        let closestHit = null;
-        let minDistance = Infinity;
+        const closestHit = findClosestHit(currentRay);
 
-        // 1. Check intersection with components
-        for (let comp of components) {
-            let hitData = comp.intersect(currentRay.origin, currentRay.dir);
-            if (hitData && hitData.distance < minDistance) {
-                minDistance = hitData.distance;
-                closestHit = { type: 'component', comp: comp, data: hitData };
-            }
-        }
-
-        // 2. Check intersection with detectors (circle intersection)
-        for (let det of detectors) {
-            // Ray-circle intersection
-            let v = currentRay.origin.sub(det.pos);
-            let b = 2 * v.dot(currentRay.dir);
-            let c = v.dot(v) - det.radius * det.radius;
-            let discriminant = b*b - 4*c;
-
-            if (discriminant >= 0) {
-                let t = (-b - Math.sqrt(discriminant)) / 2;
-                if (t >= 0.1 && t < minDistance) {
-                    minDistance = t;
-                    closestHit = { type: 'detector', det: det, distance: t };
-                }
-            }
-        }
-
-        // 3. Resolve hit or go off screen
         let endPoint;
         if (closestHit) {
             if (closestHit.type === 'component') {
                 endPoint = closestHit.data.point;
                 beams.push(new BeamSegment(currentRay.origin, endPoint, currentRay.intensity));
 
-                // Spawn new rays based on component interaction
-                let newRays = closestHit.comp.interact(currentRay.dir, closestHit.data, currentRay.intensity);
-                newRays.forEach(nr => {
-                    raysToProcess.push({
-                        origin: nr.origin,
-                        dir: nr.dir,
-                        intensity: nr.intensity,
-                        bounces: currentRay.bounces + 1
-                    });
-                });
+                // Spawn new rays based on component interaction functionally mapped to queue items
+                const newRays = closestHit.comp.interact(currentRay.dir, closestHit.data, currentRay.intensity);
+                raysToProcess.push(...newRays.map(nr => ({
+                    origin: nr.origin,
+                    dir: nr.dir,
+                    intensity: nr.intensity,
+                    bounces: currentRay.bounces + 1
+                })));
             } else if (closestHit.type === 'detector') {
                 endPoint = currentRay.origin.add(currentRay.dir.mult(closestHit.distance));
                 beams.push(new BeamSegment(currentRay.origin, endPoint, currentRay.intensity));
 
-                // Add intensity to detector
+                // Accumulate intensity to detector (side-effect)
                 closestHit.det.detectedIntensity += currentRay.intensity;
             }
         } else {
@@ -765,51 +912,37 @@ function loadStage(stageNum) {
     let cx = cw / 2;
     let cy = ch / 2;
 
-    if (stageNum === 1) {
-        document.getElementById('stage-title').innerText = "Stage 1: 거울 반사 (Reflection)";
-        document.getElementById('stage-desc').innerText = "거울의 중심이나 끝을 드래그하여 각도를 맞춰 레이저를 목표에 도달시키세요.";
-        updateOpticsPanel("반사의 법칙", "θi = θr", "매질의 경계면에서 반사될 때, 입사각과 반사각은 법선을 기준으로 항상 같습니다.");
+    updateStageTexts();
 
-        lasers.push(new LaserSource(cx - 300, cy, 0)); // Pointing right
-        detectors.push(new Detector(cx, cy - 200));
+    if (stageNum === 1) {
+        lasers.push(new LaserSource(cx - 150, cy, 0)); // Pointing right
+        detectors.push(new Detector(cx, cy - 150));
 
         // Add one draggable mirror
         let mirror = new Mirror(cx, cy, 100, Math.PI / 4);
         components.push(mirror);
 
     } else if (stageNum === 2) {
-        document.getElementById('stage-title').innerText = "Stage 2: 굴절 (Snell's Law)";
-        document.getElementById('stage-desc').innerText = "유리 매질을 통과할 때 빛이 꺾이는 각도를 이용해 목표에 도달시키세요.";
-        updateOpticsPanel("스넬의 법칙", "n1·sin(θ1) = n2·sin(θ2)", "빛이 서로 다른 매질을 통과할 때 굴절률(n)의 차이에 의해 진행 방향이 꺾입니다.");
-
-        lasers.push(new LaserSource(cx - 300, cy - 100, 0)); // Pointing right
-        detectors.push(new Detector(cx + 300, cy + 100)); // Offset due to refraction
+        lasers.push(new LaserSource(cx - 150, cy - 50, 0)); // Pointing right
+        detectors.push(new Detector(cx + 150, cy + 50)); // Offset due to refraction
 
         // Add a block of glass (high refractive index)
-        let glass = new Glass(cx, cy, 300, Math.PI / 2, 1.8);
+        let glass = new Glass(cx, cy, 150, Math.PI / 2, 1.8);
         components.push(glass);
 
     } else if (stageNum === 3) {
-        document.getElementById('stage-title').innerText = "Stage 3: 광 분배기 (Beam Splitter)";
-        document.getElementById('stage-desc').innerText = "빔 스플리터를 이용해 빛을 50:50으로 나누어 두 개의 목표를 동시에 켜세요.";
-        updateOpticsPanel("파동 광학: 분배", "I_out = I_in / 2", "빔 스플리터는 빛의 절반을 투과시키고 절반을 반사시킵니다.");
-
-        lasers.push(new LaserSource(cx - 300, cy, 0));
-        detectors.push(new Detector(cx, cy - 200)); // Top
-        detectors.push(new Detector(cx + 300, cy)); // Right
+        lasers.push(new LaserSource(cx - 150, cy, 0));
+        detectors.push(new Detector(cx, cy - 150)); // Top
+        detectors.push(new Detector(cx + 150, cy)); // Right
 
         let splitter = new BeamSplitter(cx, cy, 150, Math.PI / 4);
         components.push(splitter);
 
     } else if (stageNum === 4) {
-        document.getElementById('stage-title').innerText = "Stage 4: Optical AND Gate";
-        document.getElementById('stage-desc').innerText = "빔 스플리터를 역으로 활용해 두 빛이 겹치게 하여 임계치 이상이 되도록 하세요.";
-        updateOpticsPanel("광학 논리 게이트", "AND Gate", "디텍터의 요구 강도가 높습니다. 두 개의 광원 신호가 합쳐져야만 활성화됩니다.");
+        lasers.push(new LaserSource(cx - 150, cy, 0)); // Laser A
+        lasers.push(new LaserSource(cx, cy + 150, -Math.PI/2)); // Laser B
 
-        lasers.push(new LaserSource(cx - 300, cy, 0)); // Laser A
-        lasers.push(new LaserSource(cx, cy + 300, -Math.PI/2)); // Laser B
-
-        let det = new Detector(cx + 300, cy);
+        let det = new Detector(cx + 150, cy);
         det.requiredIntensity = 0.8; // Requires combination of two split beams
         detectors.push(det);
 
@@ -817,25 +950,55 @@ function loadStage(stageNum) {
         components.push(splitter);
 
         // Add a mirror to help redirect if needed
-        components.push(new Mirror(cx - 100, cy - 200, 100, 0));
+        components.push(new Mirror(cx - 50, cy - 100, 100, 0));
+
+    } else if (stageNum === 5) {
+        // Stage 5: Optical OR Gate
+        lasers.push(new LaserSource(cx - 150, cy - 50, 0)); // Laser A
+        lasers.push(new LaserSource(cx - 150, cy + 50, 0)); // Laser B
+
+        let det = new Detector(cx + 150, cy);
+        det.requiredIntensity = 0.4; // Low threshold, one beam is enough
+        detectors.push(det);
+
+        // Provide mirrors and splitters
+        components.push(new BeamSplitter(cx, cy, 100, Math.PI / 4));
+        components.push(new Mirror(cx, cy - 50, 80, -Math.PI / 4));
+        components.push(new Mirror(cx, cy + 50, 80, Math.PI / 4));
+
+    } else if (stageNum === 6) {
+        // Stage 6: Mach-Zehnder Routing (Complex)
+        lasers.push(new LaserSource(cx - 200, cy - 100, 0)); // Single source
+
+        let det1 = new Detector(cx + 150, cy - 100);
+        let det2 = new Detector(cx + 150, cy + 100);
+        detectors.push(det1, det2);
+
+        // First beam splitter
+        components.push(new BeamSplitter(cx - 100, cy - 100, 100, Math.PI / 4));
+        // Mirrors to route the split beams
+        components.push(new Mirror(cx - 100, cy + 100, 100, Math.PI / 4));
+        components.push(new Mirror(cx + 50, cy - 100, 100, -Math.PI / 4));
+        // Second beam splitter to recombine/route
+        components.push(new BeamSplitter(cx + 50, cy + 100, 100, -Math.PI / 4));
     }
 }
 
-function showClearMessage() {
-    if (state === 'end') return;
+function showClearMessage(forceRefresh = false) {
+    if (state === 'end' && !forceRefresh) return;
     state = 'end';
     document.getElementById('message-banner').style.display = 'block';
-    if (currentStage >= 4) {
-        document.getElementById('message-text').innerText = "모든 스테이지 클리어! (포토닉스 마스터)";
-        document.getElementById('next-stage-btn').innerText = "처음부터";
+    if (currentStage >= MAX_STAGES) {
+        document.getElementById('message-text').innerText = i18n[currentLang].clearAll;
+        document.getElementById('next-stage-btn').innerText = i18n[currentLang].restart;
     } else {
-        document.getElementById('message-text').innerText = "Signal Detected! (클리어)";
-        document.getElementById('next-stage-btn').innerText = "다음 스테이지";
+        document.getElementById('message-text').innerText = i18n[currentLang].clearStage;
+        document.getElementById('next-stage-btn').innerText = i18n[currentLang].nextStage;
     }
 }
 
 document.getElementById('next-stage-btn').addEventListener('click', () => {
-    if (currentStage >= 4) {
+    if (currentStage >= MAX_STAGES) {
         loadStage(1);
     } else {
         loadStage(currentStage + 1);
@@ -864,16 +1027,10 @@ function update() {
     // Run physics/ray tracing
     activeBeams = traceRays(lasers, components, detectors);
 
-    // Check Win Condition (All detectors must be active)
-    let allActive = true;
-    for (let det of detectors) {
-        if (det.detectedIntensity < det.requiredIntensity) {
-            allActive = false;
-            break;
-        }
-    }
+    // Check Win Condition functionally: every detector must meet its required intensity
+    const allActive = detectors.length > 0 && detectors.every(det => det.detectedIntensity >= det.requiredIntensity);
 
-    if (detectors.length > 0 && allActive) {
+    if (allActive) {
         showClearMessage();
     }
 }
@@ -882,25 +1039,11 @@ function render(ctx) {
     // Clear canvas (background handles table pattern via CSS, but we need to clear)
     ctx.clearRect(0, 0, cw, ch);
 
-    // Draw Beams
-    for (let beam of activeBeams) {
-        beam.draw(ctx);
-    }
-
-    // Draw Components
-    for (let comp of components) {
-        comp.draw(ctx);
-    }
-
-    // Draw Detectors
-    for (let det of detectors) {
-        det.draw(ctx);
-    }
-
-    // Draw Lasers
-    for (let laser of lasers) {
-        laser.draw(ctx);
-    }
+    // Draw all entities functionally using forEach
+    activeBeams.forEach(beam => beam.draw(ctx));
+    components.forEach(comp => comp.draw(ctx));
+    detectors.forEach(det => det.draw(ctx));
+    lasers.forEach(laser => laser.draw(ctx));
 }
 
 // Start Game
