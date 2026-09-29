@@ -211,7 +211,15 @@ const i18n = {
         stage5Title: "Stage 5: Optical OR Gate",
         stage5Desc: "두 경로 중 하나의 빛만 도달해도 디텍터가 활성화됩니다.",
         stage6Title: "Stage 6: 마하-젠더 간섭계 라우팅",
-        stage6Desc: "여러 거울과 스플리터를 사용해 빛을 복잡하게 라우팅하여 두 목표를 모두 활성화하세요.",
+                stage6Desc: "여러 거울과 스플리터를 사용해 빛을 복잡하게 라우팅하여 두 목표를 모두 활성화하세요.",
+        stage7Title: "Stage 7: 마하-젠더 간섭계 (MZI)",
+        stage7Desc: "위상 천이기(Phase Shifter)를 이용해 빛의 위상을 바꿔 보강/상쇄 간섭을 일으켜 원하는 곳으로 빛을 라우팅하세요.",
+        stage8Title: "Stage 8: 광학 XOR 게이트 (Optical XOR)",
+        stage8Desc: "레이저를 클릭해 켜거나 끕니다. 두 레이저 중 하나만 켜질 때만 디텍터가 켜지게 만드세요. (위상차 이용)",
+        opticsMZITitle: "마하-젠더 간섭계",
+        opticsMZIDesc: "빛을 두 경로로 나눈 뒤 다시 합칠 때, 경로의 위상 차이에 따라 보강 혹은 상쇄 간섭이 발생합니다.",
+        opticsXORTitle: "간섭을 이용한 XOR 연산",
+        opticsXORDesc: "두 빛이 만날 때 위상이 반대면 완전히 상쇄(0)되고, 하나만 있으면 빛이 도달(1)하는 원리를 이용한 논리 연산입니다.",
         opticsReflectionTitle: "반사의 법칙",
         opticsReflectionDesc: "매질의 경계면에서 반사될 때, 입사각과 반사각은 법선을 기준으로 항상 같습니다.",
         opticsSnellTitle: "스넬의 법칙",
@@ -244,7 +252,15 @@ const i18n = {
         stage5Title: "Stage 5: Optical OR Gate",
         stage5Desc: "The detector activates even if light from only one of the paths reaches it.",
         stage6Title: "Stage 6: Mach-Zehnder Routing",
-        stage6Desc: "Use multiple mirrors and splitters to route light and activate both targets.",
+                stage6Desc: "Use multiple mirrors and splitters to route light and activate both targets.",
+        stage7Title: "Stage 7: Mach-Zehnder Interferometer",
+        stage7Desc: "Use a Phase Shifter to alter the light's phase, creating constructive/destructive interference to route the light.",
+        stage8Title: "Stage 8: Optical XOR Gate",
+        stage8Desc: "Click lasers to toggle them on/off. Configure so the detector activates ONLY when one laser is on (using phase).",
+        opticsMZITitle: "Mach-Zehnder Interferometer",
+        opticsMZIDesc: "When split light is recombined, the phase difference between paths causes constructive or destructive interference.",
+        opticsXORTitle: "Interference XOR Computation",
+        opticsXORDesc: "Logical computation using the principle that opposite phases perfectly cancel (0), while a single beam reaches (1).",
         opticsReflectionTitle: "Law of Reflection",
         opticsReflectionDesc: "When reflecting from a medium boundary, the angle of incidence and reflection are always equal relative to the normal.",
         opticsSnellTitle: "Snell's Law",
@@ -266,7 +282,7 @@ const i18n = {
 };
 
 let currentLang = 'ko';
-const MAX_STAGES = 6;
+const MAX_STAGES = 8;
 
 function setLanguage(lang) {
     currentLang = lang;
@@ -313,9 +329,17 @@ function updateStageTexts() {
         opticsTitleKey = 'opticsRoutingTitle';
         opticsFormula = "Routing";
         opticsDescKey = 'opticsRoutingDesc';
+    } else if (currentStage === 7) {
+        opticsTitleKey = 'opticsMZITitle';
+        opticsFormula = 'I = I1 + I2 + 2√(I1I2)cos(Δφ)';
+        opticsDescKey = 'opticsMZIDesc';
+    } else if (currentStage === 8) {
+        opticsTitleKey = 'opticsXORTitle';
+        opticsFormula = 'L1 ⊕ L2 = I (Δφ = π)';
+        opticsDescKey = 'opticsXORDesc';
     }
 
-    if (t[titleKey]) document.getElementById('stage-title').innerText = t[titleKey];
+    document.getElementById('stage-title').innerText = t[titleKey];
     if (t[descKey]) document.getElementById('stage-desc').innerText = t[descKey];
     if (t[opticsTitleKey]) updateOpticsPanel(t[opticsTitleKey], opticsFormula, t[opticsDescKey]);
 }
@@ -369,10 +393,11 @@ class Vec2 {
 
 // Represents a single segment of a laser beam
 class BeamSegment {
-    constructor(start, end, intensity = 1.0, color = '#0f0') {
+    constructor(start, end, intensity = 1.0, phase = 0, color = '#0f0') {
         this.start = start; // Vec2
         this.end = end;     // Vec2
         this.intensity = intensity; // 0.0 to 1.0
+        this.phase = phase; // Phase angle in radians
         this.color = color;
     }
 
@@ -416,9 +441,9 @@ class LaserSource {
     draw(ctx) {
         ctx.beginPath();
         ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = '#333';
+        ctx.fillStyle = this.isOn ? '#333' : '#111'; // Dimmer background if off
         ctx.fill();
-        ctx.strokeStyle = '#0f0';
+        ctx.strokeStyle = this.isOn ? '#0f0' : '#444'; // Dimmer border if off
         ctx.lineWidth = 2;
         ctx.stroke();
 
@@ -439,6 +464,7 @@ class Detector {
         this.pos = new Vec2(x, y);
         this.radius = 20;
         this.detectedIntensity = 0;
+        this.hits = []; // To store {intensity, phase} for interference calculation
         this.requiredIntensity = 0.5; // Threshold to activate
     }
 
@@ -535,8 +561,8 @@ class OpticalComponent {
     }
 
     // To be overridden by subclasses
-    interact(rayDir, hitData, intensity) {
-        return []; // Returns array of new rays {origin, dir, intensity}
+    interact(rayDir, hitData, intensity, currentRay) {
+        return []; // Returns array of new rays {origin, dir, intensity, phase}
     }
 
     draw(ctx) {
@@ -551,7 +577,7 @@ class Mirror extends OpticalComponent {
     }
 
     // Reflection Law: r = d - 2(d \cdot n)n
-    interact(rayDir, hitData, intensity) {
+    interact(rayDir, hitData, intensity, currentRay) {
         let n = hitData.normal;
         let dot = rayDir.dot(n);
         let reflectDir = rayDir.sub(n.mult(2 * dot)).normalize();
@@ -559,7 +585,8 @@ class Mirror extends OpticalComponent {
         return [{
             origin: hitData.point,
             dir: reflectDir,
-            intensity: intensity
+            intensity: intensity * 0.95,
+            phase: currentRay ? (currentRay.phase + Math.PI) % (2 * Math.PI) : 0
         }];
     }
 
@@ -591,7 +618,8 @@ class Glass extends OpticalComponent {
 
     // Snell's Law: n1 * sin(theta1) = n2 * sin(theta2)
     // Using vector form of refraction
-    interact(rayDir, hitData, intensity) {
+    interact(rayDir, hitData, intensity, currentRay) {
+        let phase = currentRay ? currentRay.phase : 0;
         // Determine if entering or exiting
         let n1 = 1.0; // Air
         let n2 = this.index; // Medium
@@ -653,19 +681,17 @@ class BeamSplitter extends OpticalComponent {
         super(x, y, width, angle);
     }
 
-    interact(rayDir, hitData, intensity) {
+    interact(rayDir, hitData, intensity, currentRay) {
         let n = hitData.normal;
         let dot = rayDir.dot(n);
 
-        // Reflected ray
         let reflectDir = rayDir.sub(n.mult(2 * dot)).normalize();
-
-        // Transmitted ray (continues straight)
         let transmitDir = rayDir.copy();
 
+        let phase = currentRay ? currentRay.phase : 0;
         return [
-            { origin: hitData.point, dir: reflectDir, intensity: intensity * 0.5 },
-            { origin: hitData.point, dir: transmitDir, intensity: intensity * 0.5 }
+            { origin: hitData.point, dir: reflectDir, intensity: intensity * 0.5, phase: (phase + Math.PI / 2) % (2 * Math.PI) },
+            { origin: hitData.point, dir: transmitDir, intensity: intensity * 0.5, phase: phase }
         ];
     }
 
@@ -687,6 +713,38 @@ class BeamSplitter extends OpticalComponent {
         ctx.stroke();
     }
 }
+class PhaseShifter extends OpticalComponent {
+    constructor(x, y, width, angle, phaseShift = Math.PI) {
+        super(x, y, width, angle);
+        this.phaseShift = phaseShift;
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.moveTo(this.p1.x, this.p1.y);
+        ctx.lineTo(this.p2.x, this.p2.y);
+        ctx.strokeStyle = '#a200ff';
+        ctx.lineWidth = 10;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(this.p1.x, this.p1.y);
+        ctx.lineTo(this.p2.x, this.p2.y);
+        ctx.strokeStyle = 'rgba(200, 100, 255, 0.5)';
+        ctx.lineWidth = 16;
+        ctx.stroke();
+    }
+
+    interact(currentDir, hitData, currentIntensity, currentRay) {
+        return [{
+            origin: hitData.point,
+            dir: currentDir,
+            intensity: currentIntensity * 0.98,
+            phase: (currentRay.phase + this.phaseShift) % (2 * Math.PI)
+        }];
+    }
+}
+
 
 /**
  * -------------------------------------------------------------
@@ -704,7 +762,7 @@ function traceRays(sources, components, detectors, maxBounces = 10) {
     let beams = [];
 
     // Reset detectors state
-    detectors.forEach(d => d.detectedIntensity = 0);
+    detectors.forEach(d => { d.detectedIntensity = 0; d.hits = []; });
 
     // Initialize processing queue with active sources
     const raysToProcess = sources
@@ -713,6 +771,7 @@ function traceRays(sources, components, detectors, maxBounces = 10) {
             origin: source.pos,
             dir: source.dir,
             intensity: 1.0,
+            phase: source.initialPhase || 0, // Lasers can have initial phase
             bounces: 0
         }));
 
@@ -764,29 +823,49 @@ function traceRays(sources, components, detectors, maxBounces = 10) {
         if (closestHit) {
             if (closestHit.type === 'component') {
                 endPoint = closestHit.data.point;
-                beams.push(new BeamSegment(currentRay.origin, endPoint, currentRay.intensity));
+                beams.push(new BeamSegment(currentRay.origin, endPoint, currentRay.intensity, currentRay.phase));
 
                 // Spawn new rays based on component interaction functionally mapped to queue items
-                const newRays = closestHit.comp.interact(currentRay.dir, closestHit.data, currentRay.intensity);
+                const newRays = closestHit.comp.interact(currentRay.dir, closestHit.data, currentRay.intensity, currentRay);
                 raysToProcess.push(...newRays.map(nr => ({
                     origin: nr.origin,
                     dir: nr.dir,
                     intensity: nr.intensity,
+                    phase: nr.phase,
                     bounces: currentRay.bounces + 1
                 })));
             } else if (closestHit.type === 'detector') {
                 endPoint = currentRay.origin.add(currentRay.dir.mult(closestHit.distance));
-                beams.push(new BeamSegment(currentRay.origin, endPoint, currentRay.intensity));
+                beams.push(new BeamSegment(currentRay.origin, endPoint, currentRay.intensity, currentRay.phase));
 
-                // Accumulate intensity to detector (side-effect)
-                closestHit.det.detectedIntensity += currentRay.intensity;
+                // Accumulate hit for interference calculation
+                closestHit.det.hits.push({ intensity: currentRay.intensity, phase: currentRay.phase });
             }
         } else {
             // No hit, extend ray off-screen
             endPoint = currentRay.origin.add(currentRay.dir.mult(2000));
-            beams.push(new BeamSegment(currentRay.origin, endPoint, currentRay.intensity));
+            beams.push(new BeamSegment(currentRay.origin, endPoint, currentRay.intensity, currentRay.phase));
         }
     }
+
+    // Calculate interference using functional reduction on detector hits
+    detectors.forEach(det => {
+        if (det.hits.length === 0) {
+            det.detectedIntensity = 0;
+            return;
+        }
+
+        // Complex amplitude summation: E = sum( sqrt(I) * e^(i*phi) )
+        const sumReal = det.hits.reduce((acc, hit) => acc + Math.sqrt(hit.intensity) * Math.cos(hit.phase), 0);
+        const sumImag = det.hits.reduce((acc, hit) => acc + Math.sqrt(hit.intensity) * Math.sin(hit.phase), 0);
+
+        // Intensity is square of amplitude
+        let finalIntensity = (sumReal * sumReal) + (sumImag * sumImag);
+        // Add tiny epsilon to avoid floating point issues where 0.000000000004 shows as >0
+        if (finalIntensity < 0.01) finalIntensity = 0;
+
+        det.detectedIntensity = finalIntensity;
+    });
 
     return beams;
 }
@@ -842,6 +921,14 @@ function getPointerPos(e) {
 function handleStart(e) {
     if (state !== 'playing' || e.target !== canvas) return;
     let pos = getPointerPos(e);
+
+    // Check if clicking a laser to toggle
+    for (let l of lasers) {
+        if (pos.dist(l.pos) < 20) {
+            l.isOn = !l.isOn;
+            return;
+        }
+    }
 
     // Check if dragging a component
     for (let comp of components) {
@@ -981,6 +1068,52 @@ function loadStage(stageNum) {
         components.push(new Mirror(cx + 50, cy - 100, 100, -Math.PI / 4));
         // Second beam splitter to recombine/route
         components.push(new BeamSplitter(cx + 50, cy + 100, 100, -Math.PI / 4));
+    } else if (stageNum === 7) {
+        // Stage 7: MZI - constructive / destructive interference
+        lasers.push(new LaserSource(cx - 200, cy - 100, 0)); // Source A
+
+        let det1 = new Detector(cx + 250, cy + 100); // Right target
+        let det2 = new Detector(cx + 50, cy + 250); // Down target
+
+        det1.requiredIntensity = 0.2;
+        det2.requiredIntensity = 0.2;
+        detectors.push(det1, det2);
+
+        // Beam goes from -200,-100 -> hits BS1 at -100,-100
+        components.push(new BeamSplitter(cx - 100, cy - 100, 100, Math.PI / 4));
+        // Reflected beam goes DOWN to -100, 100
+        // Transmitted beam goes RIGHT to 50, -100
+
+        // Mirror at -100, 100 routes RIGHT
+        components.push(new Mirror(cx - 100, cy + 100, 100, Math.PI / 4));
+        // Mirror at 50, -100 routes DOWN
+        components.push(new Mirror(cx + 50, cy - 100, 100, Math.PI / 4));
+
+        // Second beam splitter at 50, 100
+        components.push(new BeamSplitter(cx + 50, cy + 100, 100, Math.PI / 4));
+
+        // The user is provided a phase shifter to place in one of the paths to toggle the output
+        components.push(new PhaseShifter(cx - 25, cy, 100, 0, Math.PI));
+    } else if (stageNum === 8) {
+        // Stage 8: Optical XOR Gate
+        let l1 = new LaserSource(cx - 200, cy, 0); // L1 goes RIGHT
+        let l2 = new LaserSource(cx, cy - 200, Math.PI/2); // L2 goes DOWN
+        l1.isOn = true;
+        l2.isOn = true; // Users can click to toggle
+        lasers.push(l1, l2);
+
+        // Detector at the right
+        let det = new Detector(cx + 200, cy);
+        det.requiredIntensity = 0.2;
+        detectors.push(det);
+
+        // Beam Splitter where they meet
+        let bs1 = new BeamSplitter(cx, cy, 100, Math.PI/4); // / orientation
+
+        // PhaseShifter on L2's path before the BS, adding Pi/2.
+        let ps = new PhaseShifter(cx, cy - 100, 80, 0, Math.PI/2);
+
+        components.push(bs1, ps);
     }
 }
 
@@ -1028,7 +1161,13 @@ function update() {
     activeBeams = traceRays(lasers, components, detectors);
 
     // Check Win Condition functionally: every detector must meet its required intensity
-    const allActive = detectors.length > 0 && detectors.every(det => det.detectedIntensity >= det.requiredIntensity);
+    let allActive = false;
+
+    if (currentStage === 8) {
+        allActive = detectors.length > 0 && detectors.every(det => det.detectedIntensity >= det.requiredIntensity);
+    } else {
+        allActive = detectors.length > 0 && detectors.every(det => det.detectedIntensity >= det.requiredIntensity);
+    }
 
     if (allActive) {
         showClearMessage();
