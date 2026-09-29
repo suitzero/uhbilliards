@@ -1,0 +1,59 @@
+name: HTML and JS Checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install html5validator
+        run: pip install html5validator
+
+      - name: Validate HTML5
+        run: html5validator --root . --ext html
+
+      - name: Check JavaScript Syntax
+        run: |
+          cat << 'EOF' > check-js.js
+          const fs = require('fs');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const regex = /<script\b[^>]*>([\s\S]*?)<\/script>/gi;
+          let match;
+          let count = 0;
+          let success = true;
+          const { execSync } = require('child_process');
+
+          while ((match = regex.exec(html)) !== null) {
+            const code = match[1];
+            if (code.trim()) {
+              const filename = `script_${count}.js`;
+              fs.writeFileSync(filename, code);
+              try {
+                execSync(`node --check ${filename}`, { stdio: 'inherit' });
+              } catch (err) {
+                console.error(`Syntax error in script block ${count}`);
+                success = false;
+              }
+              count++;
+            }
+          }
+          if (!success) {
+            process.exit(1);
+          }
+          EOF
+          node check-js.js
