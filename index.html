@@ -216,10 +216,14 @@ const i18n = {
         stage7Desc: "위상 천이기(Phase Shifter)를 이용해 빛의 위상을 바꿔 보강/상쇄 간섭을 일으켜 원하는 곳으로 빛을 라우팅하세요.",
         stage8Title: "Stage 8: 광학 XOR 게이트 (Optical XOR)",
         stage8Desc: "레이저를 클릭해 켜거나 끕니다. 두 레이저 중 하나만 켜질 때만 디텍터가 켜지게 만드세요. (위상차 이용)",
+        stage9Title: "Stage 9: 광학 NOT 게이트 (Optical NOT)",
+        stage9Desc: "입력 레이저(토글 가능)가 켜지면 상쇄 간섭이 일어나 디텍터가 꺼지고, 꺼지면 기준 레이저 빛이 도달해 디텍터가 켜지도록 만드세요.",
         opticsMZITitle: "마하-젠더 간섭계",
         opticsMZIDesc: "빛을 두 경로로 나눈 뒤 다시 합칠 때, 경로의 위상 차이에 따라 보강 혹은 상쇄 간섭이 발생합니다.",
         opticsXORTitle: "간섭을 이용한 XOR 연산",
         opticsXORDesc: "두 빛이 만날 때 위상이 반대면 완전히 상쇄(0)되고, 하나만 있으면 빛이 도달(1)하는 원리를 이용한 논리 연산입니다.",
+        opticsNOTTitle: "광학 NOT 게이트",
+        opticsNOTDesc: "기준 신호와 입력 신호를 상쇄 간섭시켜, 입력이 있을 때 출력을 0으로 반전시킵니다.",
         opticsReflectionTitle: "반사의 법칙",
         opticsReflectionDesc: "매질의 경계면에서 반사될 때, 입사각과 반사각은 법선을 기준으로 항상 같습니다.",
         opticsSnellTitle: "스넬의 법칙",
@@ -257,10 +261,14 @@ const i18n = {
         stage7Desc: "Use a Phase Shifter to alter the light's phase, creating constructive/destructive interference to route the light.",
         stage8Title: "Stage 8: Optical XOR Gate",
         stage8Desc: "Click lasers to toggle them on/off. Configure so the detector activates ONLY when one laser is on (using phase).",
+        stage9Title: "Stage 9: Optical NOT Gate",
+        stage9Desc: "Toggle the input laser. When it is ON, destructive interference turns the detector OFF. When OFF, the reference beam turns it ON.",
         opticsMZITitle: "Mach-Zehnder Interferometer",
         opticsMZIDesc: "When split light is recombined, the phase difference between paths causes constructive or destructive interference.",
         opticsXORTitle: "Interference XOR Computation",
         opticsXORDesc: "Logical computation using the principle that opposite phases perfectly cancel (0), while a single beam reaches (1).",
+        opticsNOTTitle: "Optical NOT Gate",
+        opticsNOTDesc: "Inverts the signal by destructively interfering the input signal with a constant reference beam.",
         opticsReflectionTitle: "Law of Reflection",
         opticsReflectionDesc: "When reflecting from a medium boundary, the angle of incidence and reflection are always equal relative to the normal.",
         opticsSnellTitle: "Snell's Law",
@@ -282,7 +290,7 @@ const i18n = {
 };
 
 let currentLang = 'ko';
-const MAX_STAGES = 8;
+const MAX_STAGES = 9;
 
 function setLanguage(lang) {
     currentLang = lang;
@@ -337,6 +345,10 @@ function updateStageTexts() {
         opticsTitleKey = 'opticsXORTitle';
         opticsFormula = 'L1 ⊕ L2 = I (Δφ = π)';
         opticsDescKey = 'opticsXORDesc';
+    } else if (currentStage === 9) {
+        opticsTitleKey = 'opticsNOTTitle';
+        opticsFormula = 'NOT L_in = I (Δφ = π)';
+        opticsDescKey = 'opticsNOTDesc';
     }
 
     document.getElementById('stage-title').innerText = t[titleKey];
@@ -1112,6 +1124,39 @@ function loadStage(stageNum) {
 
         // PhaseShifter on L2's path before the BS, adding Pi/2.
         let ps = new PhaseShifter(cx, cy - 100, 80, 0, Math.PI/2);
+
+        components.push(bs1, ps);
+    } else if (stageNum === 9) {
+        // Stage 9: Optical NOT Gate
+        let l_in = new LaserSource(cx - 200, cy, 0); // Input goes RIGHT
+        let l_ref = new LaserSource(cx, cy - 200, Math.PI/2); // Reference goes DOWN
+        l_in.isOn = true;
+        l_ref.isOn = true; // Reference is always ON, but we allow user to toggle input
+        // By design reference should probably be locked, but we just leave it for user to play with or keep it simple
+        lasers.push(l_in, l_ref);
+
+        // Detector at the right
+        let det = new Detector(cx + 200, cy);
+        det.requiredIntensity = 0.2;
+        detectors.push(det);
+
+        // Beam Splitter where they meet
+        let bs1 = new BeamSplitter(cx, cy, 100, Math.PI/4); // / orientation
+
+        // PhaseShifter on l_in's path before the BS, adding Pi to cause destructive interference when ON
+        // If L_ref has phase 0 and L_in has phase Pi, when they meet at BS:
+        // L_in transmitted -> phase Pi
+        // L_ref reflected -> phase 0 + Pi/2 = Pi/2 (Wait, let's look at BeamSplitter implementation)
+        // BeamSplitter: reflect: phase + Pi/2, transmit: phase
+        // L_in transmitted to detector -> phase of L_in
+        // L_ref reflected to detector -> phase of L_ref + Pi/2
+        // So we need L_in phase = L_ref + Pi/2 + Pi = L_ref - Pi/2.
+        // Wait, phase difference should be Pi.
+        // L_in reaches detector via transmission: phase = ps.phaseShift
+        // L_ref reaches detector via reflection: phase = 0 + Pi/2 = Pi/2
+        // To have destructive interference (diff = Pi), ps.phaseShift should be Pi/2 + Pi = 3Pi/2 = -Pi/2
+        // Or we can just set ps = PhaseShifter with 3Pi/2 or -Pi/2.
+        let ps = new PhaseShifter(cx - 100, cy, 80, Math.PI/2, Math.PI * 1.5);
 
         components.push(bs1, ps);
     }
