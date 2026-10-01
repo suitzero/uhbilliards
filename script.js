@@ -1,196 +1,4 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Newton's Billiards</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #111;
-            /* Optical table grid pattern */
-            background-image:
-                linear-gradient(rgba(0, 255, 128, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 128, 0.1) 1px, transparent 1px);
-            background-size: 20px 20px;
-            overflow: hidden;
-            touch-action: none;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: white;
-        }
 
-        #gameCanvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* UI Overlay */
-        #ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .header {
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
-        }
-
-        #stage-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #0f0;
-            text-shadow: 0 0 5px #0f0;
-        }
-
-        #stage-desc {
-            font-size: 0.9rem;
-            color: #ddd;
-            margin-top: 5px;
-        }
-
-        .btn {
-            pointer-events: auto;
-            background-color: #333;
-            color: #0f0;
-            border: 1px solid #0f0;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            box-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn:hover {
-            background-color: #0f0;
-            color: #000;
-        }
-
-        .btn:active {
-            transform: translateY(2px);
-        }
-
-        #reset-btn {
-            border-color: #f44336;
-            color: #f44336;
-            box-shadow: 0 0 5px rgba(244, 67, 54, 0.3);
-        }
-
-        #reset-btn:hover {
-            background-color: #f44336;
-            color: #fff;
-        }
-
-        .footer {
-            padding: 15px;
-            display: flex;
-            justify-content: flex-end;
-            align-items: flex-end;
-        }
-
-        /* Optics Formula Panel */
-        #optics-panel {
-            pointer-events: auto;
-            background-color: rgba(0, 0, 0, 0.85);
-            border: 1px solid #0ff;
-            border-radius: 8px;
-            padding: 15px;
-            width: 250px;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
-            color: #0ff;
-        }
-
-        #optics-panel h3 {
-            margin: 0 0 10px 0;
-            font-size: 1rem;
-            border-bottom: 1px solid #0ff;
-            padding-bottom: 5px;
-        }
-
-        #optics-formula {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            color: #fff;
-        }
-
-        #optics-desc {
-            font-size: 0.8rem;
-            color: #ccc;
-            line-height: 1.4;
-        }
-
-        /* Next Stage Banner */
-        #message-banner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.9);
-            padding: 30px 50px;
-            border-radius: 10px;
-            text-align: center;
-            display: none;
-            pointer-events: auto;
-            border: 2px solid #0f0;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
-        }
-
-        #message-text {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #0f0;
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px #0f0;
-        }
-    </style>
-</head>
-<body>
-
-    <canvas id="gameCanvas"></canvas>
-
-    <div id="ui-layer">
-        <div class="header">
-            <div>
-                <div id="stage-title">Stage 1: 거울 반사 (Reflection)</div>
-                <div id="stage-desc">거울을 배치하여 레이저를 디텍터(목표)에 도달시키세요.</div>
-            </div>
-            <div>
-                <button id="lang-btn" class="btn">EN</button>
-                <button id="reset-btn" class="btn">초기화</button>
-            </div>
-        </div>
-
-        <div class="footer">
-            <div id="optics-panel">
-                <h3 id="optics-panel-title">광학 원리 (Optics Principle)</h3>
-                <div id="optics-formula">θi = θr</div>
-                <div id="optics-desc">반사의 법칙: 매질의 경계면에서 반사될 때, 입사각과 반사각은 법선을 기준으로 항상 같습니다.</div>
-            </div>
-        </div>
-    </div>
-
-    <div id="message-banner">
-        <div id="message-text">Signal Detected! (클리어)</div>
-        <button id="next-stage-btn" class="btn">다음 스테이지</button>
-    </div>
-
-<script>
 /**
  * -------------------------------------------------------------
  * Localization (i18n)
@@ -654,7 +462,7 @@ class Glass extends OpticalComponent {
         if (sinT2 > 1.0) {
             // Reflect entirely
             let reflectDir = rayDir.add(n.mult(2 * cosI)).normalize();
-            return [{ origin: hitData.point, dir: reflectDir, intensity: intensity, phase: phase }];
+            return [{ origin: hitData.point, dir: reflectDir, intensity: intensity }];
         }
 
         // Refraction
@@ -669,8 +477,7 @@ class Glass extends OpticalComponent {
         return [{
             origin: hitData.point,
             dir: refractDir,
-            intensity: intensity * 0.95, // Small absorption
-            phase: phase
+            intensity: intensity * 0.95 // Small absorption
         }];
     }
 
@@ -912,14 +719,6 @@ let components = [];
 let detectors = [];
 let activeBeams = [];
 
-// Camera State
-let camera = { x: 0, y: 0, zoom: 1 };
-let isPanning = false;
-let panStartPos = new Vec2(0, 0);
-let cameraStartPos = new Vec2(0, 0);
-let initialPinchDist = null;
-let initialPinchZoom = null;
-
 // Drag & Drop State
 let draggedComponent = null;
 let dragOffset = new Vec2(0, 0);
@@ -932,48 +731,20 @@ function updateOpticsPanel(title, formula, desc) {
 }
 
 // Input handling
-function getPointerPosScreen(e) {
+function getPointerPos(e) {
     if (e.touches && e.touches.length > 0) {
         return new Vec2(e.touches[0].clientX, e.touches[0].clientY);
     }
     return new Vec2(e.clientX, e.clientY);
 }
 
-function screenToWorld(posScreen) {
-    return new Vec2(
-        (posScreen.x - camera.x) / camera.zoom,
-        (posScreen.y - camera.y) / camera.zoom
-    );
-}
-
-function updateBackgroundPosition() {
-    // Sync the background grid to the camera
-    let gridSize = 20 * camera.zoom;
-    document.body.style.backgroundSize = `${gridSize}px ${gridSize}px`;
-    document.body.style.backgroundPosition = `${camera.x}px ${camera.y}px`;
-}
-
 function handleStart(e) {
     if (state !== 'playing' || e.target !== canvas) return;
-
-    // Pinch to zoom logic for touch
-    if (e.touches && e.touches.length === 2) {
-        let touch1 = new Vec2(e.touches[0].clientX, e.touches[0].clientY);
-        let touch2 = new Vec2(e.touches[1].clientX, e.touches[1].clientY);
-        initialPinchDist = touch1.dist(touch2);
-        initialPinchZoom = camera.zoom;
-        isPanning = false;
-        draggedComponent = null;
-        return;
-    }
-
-    let posScreen = getPointerPosScreen(e);
-    let posWorld = screenToWorld(posScreen);
+    let pos = getPointerPos(e);
 
     // Check if clicking a laser to toggle
     for (let l of lasers) {
-        // Account for zoom in hit detection slightly if needed, but world distance is absolute
-        if (posWorld.dist(l.pos) < 20) {
+        if (pos.dist(l.pos) < 20) {
             l.isOn = !l.isOn;
             return;
         }
@@ -984,122 +755,50 @@ function handleStart(e) {
         if (!comp.isDraggable) continue;
 
         // Simple distance check to center
-        if (posWorld.dist(comp.pos) < 30) {
+        if (pos.dist(comp.pos) < 30) {
             draggedComponent = comp;
-            dragOffset = comp.pos.sub(posWorld);
+            dragOffset = comp.pos.sub(pos);
             // Right click/two fingers could trigger rotation, for simple UX we rotate on click near edge
             return;
         }
 
         // Check if clicking near edge for rotation
-        if (posWorld.dist(comp.p1) < 20 || posWorld.dist(comp.p2) < 20) {
+        if (pos.dist(comp.p1) < 20 || pos.dist(comp.p2) < 20) {
             draggedComponent = comp;
             isRotating = true;
             return;
         }
     }
-
-    // If we click on nothing, start panning
-    isPanning = true;
-    panStartPos = posScreen;
-    cameraStartPos = new Vec2(camera.x, camera.y);
 }
 
 function handleMove(e) {
-    if (state !== 'playing') return;
+    if (state !== 'playing' || !draggedComponent) return;
+    let pos = getPointerPos(e);
 
-    // Handle pinch to zoom
-    if (e.touches && e.touches.length === 2 && initialPinchDist) {
-        let touch1 = new Vec2(e.touches[0].clientX, e.touches[0].clientY);
-        let touch2 = new Vec2(e.touches[1].clientX, e.touches[1].clientY);
-        let currentDist = touch1.dist(touch2);
-
-        let zoomRatio = currentDist / initialPinchDist;
-        let newZoom = initialPinchZoom * zoomRatio;
-
-        // Clamping zoom
-        newZoom = Math.max(0.2, Math.min(newZoom, 5.0));
-
-        // Zooming around center of pinch
-        let centerScreen = new Vec2(
-            (touch1.x + touch2.x) / 2,
-            (touch1.y + touch2.y) / 2
-        );
-        let centerWorld = screenToWorld(centerScreen);
-
-        camera.zoom = newZoom;
-
-        // Adjust camera x,y to keep centerWorld under centerScreen
-        camera.x = centerScreen.x - centerWorld.x * camera.zoom;
-        camera.y = centerScreen.y - centerWorld.y * camera.zoom;
-
-        updateBackgroundPosition();
-        return;
-    }
-
-    let posScreen = getPointerPosScreen(e);
-    let posWorld = screenToWorld(posScreen);
-
-    if (draggedComponent) {
-        if (isRotating) {
-            // Rotate component to face pointer
-            let diff = posWorld.sub(draggedComponent.pos);
-            let angle = Math.atan2(diff.y, diff.x);
-            draggedComponent.setAngle(angle);
-        } else {
-            // Move component
-            let newPos = posWorld.add(dragOffset);
-            draggedComponent.setPosition(newPos.x, newPos.y);
-        }
-    } else if (isPanning) {
-        let diff = posScreen.sub(panStartPos);
-        camera.x = cameraStartPos.x + diff.x;
-        camera.y = cameraStartPos.y + diff.y;
-        updateBackgroundPosition();
+    if (isRotating) {
+        // Rotate component to face pointer
+        let diff = pos.sub(draggedComponent.pos);
+        let angle = Math.atan2(diff.y, diff.x);
+        draggedComponent.setAngle(angle);
+    } else {
+        // Move component
+        let newPos = pos.add(dragOffset);
+        draggedComponent.setPosition(newPos.x, newPos.y);
     }
 }
 
 function handleEnd(e) {
     draggedComponent = null;
     isRotating = false;
-    isPanning = false;
-    initialPinchDist = null;
 }
 
 canvas.addEventListener('mousedown', handleStart);
 canvas.addEventListener('mousemove', handleMove);
 window.addEventListener('mouseup', handleEnd);
 
-// Mouse wheel for zooming
-canvas.addEventListener('wheel', (e) => {
-    if (state !== 'playing') return;
-    e.preventDefault();
-
-    let posScreen = new Vec2(e.clientX, e.clientY);
-    let posWorldBeforeZoom = screenToWorld(posScreen);
-
-    let zoomFactor = 1.1;
-    if (e.deltaY > 0) {
-        camera.zoom /= zoomFactor;
-    } else {
-        camera.zoom *= zoomFactor;
-    }
-
-    // Clamp zoom
-    camera.zoom = Math.max(0.2, Math.min(camera.zoom, 5.0));
-
-    // Adjust camera x, y to keep mouse over the same world position
-    camera.x = posScreen.x - posWorldBeforeZoom.x * camera.zoom;
-    camera.y = posScreen.y - posWorldBeforeZoom.y * camera.zoom;
-
-    updateBackgroundPosition();
-}, { passive: false });
-
 canvas.addEventListener('touchstart', handleStart, {passive: false});
 canvas.addEventListener('touchmove', (e) => {
-    if (e.target === canvas) {
-        e.preventDefault(); // Prevent scrolling while playing
-    }
+    e.preventDefault();
     handleMove(e);
 }, {passive: false});
 window.addEventListener('touchend', handleEnd);
@@ -1260,7 +959,7 @@ function loadStage(stageNum) {
         // L_in transmitted to detector -> phase of L_in
         // L_ref reflected to detector -> phase of L_ref + Pi/2
         // So we need L_in phase = L_ref + Pi/2 + Pi = L_ref - Pi/2.
-        // Wait, phase difference should be Pi. 
+        // Wait, phase difference should be Pi.
         // L_in reaches detector via transmission: phase = ps.phaseShift
         // L_ref reaches detector via reflection: phase = 0 + Pi/2 = Pi/2
         // To have destructive interference (diff = Pi), ps.phaseShift should be Pi/2 + Pi = 3Pi/2 = -Pi/2
@@ -1332,23 +1031,13 @@ function render(ctx) {
     // Clear canvas (background handles table pattern via CSS, but we need to clear)
     ctx.clearRect(0, 0, cw, ch);
 
-    ctx.save();
-    ctx.translate(camera.x, camera.y);
-    ctx.scale(camera.zoom, camera.zoom);
-
     // Draw all entities functionally using forEach
     activeBeams.forEach(beam => beam.draw(ctx));
     components.forEach(comp => comp.draw(ctx));
     detectors.forEach(det => det.draw(ctx));
     lasers.forEach(laser => laser.draw(ctx));
-
-    ctx.restore();
 }
 
 // Start Game
 loadStage(1);
 requestAnimationFrame(gameLoop);
-
-</script>
-</body>
-</html>
